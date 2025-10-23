@@ -40,7 +40,6 @@ const formSchema = z.object({
   name: z.string().trim().min(1, { message: "Name is required" }).max(100, { message: "Name must be less than 100 characters" }),
   countryCode: z.string().trim().min(1, { message: "Country code is required" }),
   phoneNumber: z.string().trim().min(1, { message: "Phone number is required" }).regex(/^\d+$/, { message: "Phone number must contain only numbers" }),
-  role: z.string().optional(),
 });
 
 const Users = () => {
@@ -56,7 +55,6 @@ const Users = () => {
       name: "",
       countryCode: "+1",
       phoneNumber: "",
-      role: "employee",
     },
   });
 
@@ -122,8 +120,9 @@ const Users = () => {
     try {
       setSubmitting(true);
       
-      // Combine country code and phone number
-      let fullPhone = `${values.countryCode}${values.phoneNumber}`;
+      // Remove "+" sign from country code and combine with phone number
+      const cleanCountryCode = values.countryCode.replace(/\+/g, '');
+      let fullPhone = `${cleanCountryCode}${values.phoneNumber}`;
       
       // Append @c.us if not already present
       if (!fullPhone.endsWith("@c.us")) {
@@ -135,7 +134,7 @@ const Users = () => {
         .insert([{
           name: values.name,
           phone: fullPhone,
-          role: values.role as "employee" | "manager" | "technician" || "employee",
+          role: "employee",
         }]);
 
       if (error) throw error;
@@ -261,19 +260,6 @@ const Users = () => {
                           )}
                         />
                       </div>
-                      <FormField
-                        control={form.control}
-                        name="role"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Role</FormLabel>
-                            <FormControl>
-                              <Input placeholder="employee" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
                       <DialogFooter>
                         <Button type="submit" disabled={submitting}>
                           {submitting ? "Adding..." : "Add Employee"}
