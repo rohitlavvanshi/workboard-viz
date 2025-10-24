@@ -29,8 +29,16 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, MessageSquare, User, Calendar } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Plus, MessageSquare, User, Calendar, CalendarIcon, Search, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface Task {
   id: number;
@@ -57,6 +65,9 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
+  const [nameFilter, setNameFilter] = useState<string>("");
+  const [frequencyFilter, setFrequencyFilter] = useState<string>("all");
+  const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [chatHistoryOpen, setChatHistoryOpen] = useState(false);
   const [addTaskOpen, setAddTaskOpen] = useState(false);
@@ -73,7 +84,7 @@ const Index = () => {
 
   useEffect(() => {
     filterTasks();
-  }, [tasks, statusFilter, priorityFilter]);
+  }, [tasks, statusFilter, priorityFilter, nameFilter, frequencyFilter, dateFilter]);
 
   const fetchTasks = async () => {
     try {
@@ -125,6 +136,28 @@ const Index = () => {
 
     if (priorityFilter !== "all") {
       filtered = filtered.filter((task) => task.chat_status === priorityFilter);
+    }
+
+    if (nameFilter) {
+      filtered = filtered.filter((task) =>
+        task.title?.toLowerCase().includes(nameFilter.toLowerCase()) ||
+        task.user_name?.toLowerCase().includes(nameFilter.toLowerCase())
+      );
+    }
+
+    if (frequencyFilter !== "all") {
+      filtered = filtered.filter((task) => task.frequency === frequencyFilter);
+    }
+
+    if (dateFilter) {
+      filtered = filtered.filter((task) => {
+        const taskDate = new Date(task.created_at);
+        return (
+          taskDate.getDate() === dateFilter.getDate() &&
+          taskDate.getMonth() === dateFilter.getMonth() &&
+          taskDate.getFullYear() === dateFilter.getFullYear()
+        );
+      });
     }
 
     setFilteredTasks(filtered);
@@ -273,32 +306,106 @@ const Index = () => {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap gap-4 mb-6">
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="in progress">In Progress</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="space-y-4 mb-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Filters</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setStatusFilter("all");
+                setPriorityFilter("all");
+                setNameFilter("");
+                setFrequencyFilter("all");
+                setDateFilter(undefined);
+              }}
+              className="h-8"
+            >
+              <X className="h-4 w-4 mr-1" />
+              Clear All
+            </Button>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            {/* Name/Title Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name..."
+                value={nameFilter}
+                onChange={(e) => setNameFilter(e.target.value)}
+                className="pl-9"
+              />
+            </div>
 
-          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter by priority" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Priority</SelectItem>
-              <SelectItem value="high">High</SelectItem>
-              <SelectItem value="medium">Medium</SelectItem>
-              <SelectItem value="low">Low</SelectItem>
-            </SelectContent>
-          </Select>
+            {/* Status Filter */}
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="in progress">In Progress</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+              </SelectContent>
+            </Select>
 
-          <div className="ml-auto text-sm text-muted-foreground">
+            {/* Priority Filter */}
+            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by priority" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Priority</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="low">Low</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Frequency Filter */}
+            <Select value={frequencyFilter} onValueChange={setFrequencyFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by frequency" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Frequencies</SelectItem>
+                <SelectItem value="one_time">One Time</SelectItem>
+                <SelectItem value="monthly">Monthly</SelectItem>
+                <SelectItem value="quarterly">Quarterly</SelectItem>
+                <SelectItem value="semi_annually">Semi-Annually</SelectItem>
+                <SelectItem value="annually">Annually</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Date Filter */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "justify-start text-left font-normal w-full",
+                    !dateFilter && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dateFilter ? format(dateFilter, "PPP") : "Filter by date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <CalendarComponent
+                  mode="single"
+                  selected={dateFilter}
+                  onSelect={setDateFilter}
+                  initialFocus
+                  className="pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className="text-sm text-muted-foreground">
             Showing {filteredTasks.length} of {tasks.length} tasks
           </div>
         </div>
