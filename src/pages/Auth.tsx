@@ -60,20 +60,51 @@ const Auth = () => {
       }
 
       if (data.user) {
+        console.log("Logged in user ID:", data.user.id);
+        console.log("Logged in user email:", data.user.email);
+        
         // Verify user is a manager from users table
         const { data: userData, error: userError } = await supabase
           .from("users")
-          .select("role, name")
+          .select("id, role, name, auth_user_id")
           .eq("auth_user_id", data.user.id)
           .maybeSingle();
 
-        if (userError || !userData || userData.role !== "manager") {
+        console.log("Users table query result:", userData);
+        console.log("Users table query error:", userError);
+
+        if (userError) {
+          await supabase.auth.signOut();
+          toast({
+            variant: "destructive",
+            title: "Database Error",
+            description: `Error checking user permissions: ${userError.message}`,
+          });
+          setLoading(false);
+          return;
+        }
+
+        if (!userData) {
+          // User authenticated but not in users table
+          await supabase.auth.signOut();
+          toast({
+            variant: "destructive",
+            title: "Account Not Linked",
+            description: "Your account is not linked to a user profile. Please contact an administrator.",
+          });
+          console.error("Auth user not found in users table. Auth ID:", data.user.id);
+          setLoading(false);
+          return;
+        }
+
+        if (userData.role !== "manager") {
           await supabase.auth.signOut();
           toast({
             variant: "destructive",
             title: "Access Denied",
-            description: "Only managers can access this system.",
+            description: `Only managers can access this system. Your role: ${userData.role}`,
           });
+          console.log("User role is not manager:", userData.role);
           setLoading(false);
           return;
         }
