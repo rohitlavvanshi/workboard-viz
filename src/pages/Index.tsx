@@ -513,7 +513,7 @@ const Index = () => {
                           <SelectTrigger className="w-[140px]">
                             <SelectValue>
                               <Badge className={getStatusColor(task.status)}>
-                                {task.status}
+                                {task.status?.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                               </Badge>
                             </SelectValue>
                           </SelectTrigger>
