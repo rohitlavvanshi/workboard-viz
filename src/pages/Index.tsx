@@ -71,6 +71,7 @@ const Index = () => {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [chatHistoryOpen, setChatHistoryOpen] = useState(false);
   const [addTaskOpen, setAddTaskOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [newTask, setNewTask] = useState({
     title: "",
     description: "",
@@ -227,7 +228,11 @@ const Index = () => {
       return;
     }
 
+    if (isSubmitting) return;
+
     try {
+      setIsSubmitting(true);
+
       const { error } = await supabase.from("tasks").insert([{
         title: newTask.title,
         description: newTask.description,
@@ -283,6 +288,8 @@ const Index = () => {
         description: "Failed to create task",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -583,10 +590,12 @@ const Index = () => {
               </Select>
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setAddTaskOpen(false)}>
+              <Button variant="outline" onClick={() => setAddTaskOpen(false)} disabled={isSubmitting}>
                 Cancel
               </Button>
-              <Button onClick={handleAddTask}>Create Task</Button>
+              <Button onClick={handleAddTask} disabled={isSubmitting}>
+                {isSubmitting ? "Creating..." : "Create Task"}
+              </Button>
             </div>
           </div>
         </DialogContent>
