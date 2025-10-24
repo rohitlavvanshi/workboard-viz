@@ -490,11 +490,11 @@ const Index = () => {
 
       {/* Add Task Dialog */}
       <Dialog open={addTaskOpen} onOpenChange={setAddTaskOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Add New Task</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-4 overflow-y-auto pr-2">
             <div>
               <Label htmlFor="title">Title *</Label>
               <Input
@@ -569,12 +569,12 @@ const Index = () => {
 
       {/* Chat History Dialog */}
       <Dialog open={chatHistoryOpen} onOpenChange={setChatHistoryOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>{selectedTask?.title || "Task Chat History"}</DialogTitle>
           </DialogHeader>
           {selectedTask && (
-            <div className="space-y-4">
+            <div className="space-y-4 overflow-y-auto pr-2">
               <div>
                 <h4 className="font-semibold mb-2">Description</h4>
                 <p className="text-sm text-muted-foreground">
@@ -595,7 +595,7 @@ const Index = () => {
               </div>
               <div>
                 <h4 className="font-semibold mb-2">Chat History</h4>
-                <div className="rounded-md border bg-muted/50 p-4 text-sm max-h-96 overflow-y-auto whitespace-pre-wrap">
+                <div className="rounded-md border bg-muted/50 p-4 text-sm max-h-64 overflow-y-auto whitespace-pre-wrap">
                   {selectedTask.chat_history || "No chat history available"}
                 </div>
               </div>
