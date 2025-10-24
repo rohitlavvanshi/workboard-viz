@@ -21,15 +21,15 @@ const Auth = () => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        // Verify manager role
-        const { data: roleData } = await supabase
-          .from("user_roles")
+        // Verify manager role from users table
+        const { data: userData } = await supabase
+          .from("users")
           .select("role")
-          .eq("user_id", session.user.id)
+          .eq("auth_user_id", session.user.id)
           .eq("role", "manager")
-          .single();
+          .maybeSingle();
 
-        if (roleData) {
+        if (userData) {
           navigate("/dashboard");
         }
       }
@@ -60,15 +60,14 @@ const Auth = () => {
       }
 
       if (data.user) {
-        // Verify user is a manager
-        const { data: roleData, error: roleError } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", data.user.id)
-          .eq("role", "manager")
-          .single();
+        // Verify user is a manager from users table
+        const { data: userData, error: userError } = await supabase
+          .from("users")
+          .select("role, name")
+          .eq("auth_user_id", data.user.id)
+          .maybeSingle();
 
-        if (roleError || !roleData) {
+        if (userError || !userData || userData.role !== "manager") {
           await supabase.auth.signOut();
           toast({
             variant: "destructive",
@@ -81,7 +80,7 @@ const Auth = () => {
 
         toast({
           title: "Login Successful",
-          description: "Welcome back!",
+          description: `Welcome back${userData.name ? ', ' + userData.name : ''}!`,
         });
         navigate("/dashboard");
       }

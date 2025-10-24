@@ -51,11 +51,11 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const checkManagerRole = async (userId: string) => {
     try {
       const { data, error } = await supabase
-        .from("user_roles")
+        .from("users")
         .select("role")
-        .eq("user_id", userId)
+        .eq("auth_user_id", userId)
         .eq("role", "manager")
-        .single();
+        .maybeSingle();
 
       setIsManager(!!data && !error);
     } catch (error) {
