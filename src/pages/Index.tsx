@@ -484,11 +484,45 @@ const Index = () => {
                       </TableCell>
                       <TableCell>{getFrequencyLabel(task.frequency)}</TableCell>
                       <TableCell>
-                        {task.status && (
-                          <Badge className={getStatusColor(task.status)}>
-                            {task.status}
-                          </Badge>
-                        )}
+                        <Select
+                          value={task.status || "pending"}
+                          onValueChange={async (value) => {
+                            try {
+                              const { error } = await supabase
+                                .from("tasks")
+                                .update({ status: value })
+                                .eq("id", task.id);
+
+                              if (error) throw error;
+
+                              toast({
+                                title: "Success",
+                                description: "Status updated successfully",
+                              });
+                              fetchTasks();
+                            } catch (error) {
+                              console.error("Error updating status:", error);
+                              toast({
+                                title: "Error",
+                                description: "Failed to update status",
+                                variant: "destructive",
+                              });
+                            }
+                          }}
+                        >
+                          <SelectTrigger className="w-[140px]">
+                            <SelectValue>
+                              <Badge className={getStatusColor(task.status)}>
+                                {task.status}
+                              </Badge>
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">Pending</SelectItem>
+                            <SelectItem value="in progress">In Progress</SelectItem>
+                            <SelectItem value="completed">Completed</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </TableCell>
                       <TableCell>
                         {task.chat_status && (
