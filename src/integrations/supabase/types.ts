@@ -118,6 +118,7 @@ export type Database = {
           chat_status: Database["public"]["Enums"]["chat_status"] | null
           created_at: string
           description: string | null
+          frequency: Database["public"]["Enums"]["task_frequency"] | null
           id: number
           status: string | null
           title: string | null
@@ -128,6 +129,7 @@ export type Database = {
           chat_status?: Database["public"]["Enums"]["chat_status"] | null
           created_at?: string
           description?: string | null
+          frequency?: Database["public"]["Enums"]["task_frequency"] | null
           id?: number
           status?: string | null
           title?: string | null
@@ -138,6 +140,7 @@ export type Database = {
           chat_status?: Database["public"]["Enums"]["chat_status"] | null
           created_at?: string
           description?: string | null
+          frequency?: Database["public"]["Enums"]["task_frequency"] | null
           id?: number
           status?: string | null
           title?: string | null
@@ -190,6 +193,12 @@ export type Database = {
     Enums: {
       chat_status: "open" | "closed"
       role: "employee" | "technician" | "manager"
+      task_frequency:
+        | "one_time"
+        | "monthly"
+        | "quarterly"
+        | "semi_annually"
+        | "annually"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -319,6 +328,13 @@ export const Constants = {
     Enums: {
       chat_status: ["open", "closed"],
       role: ["employee", "technician", "manager"],
+      task_frequency: [
+        "one_time",
+        "monthly",
+        "quarterly",
+        "semi_annually",
+        "annually",
+      ],
     },
   },
 } as const
