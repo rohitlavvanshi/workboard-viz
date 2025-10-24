@@ -233,18 +233,19 @@ const Index = () => {
     try {
       setIsSubmitting(true);
 
-      const { error } = await supabase.from("tasks").insert([{
+      const { data, error } = await supabase.from("tasks").insert([{
         title: newTask.title,
         description: newTask.description,
         user_id: parseInt(newTask.user_id),
         frequency: newTask.frequency as any,
         status: "pending",
-      }]);
+      }]).select();
 
       if (error) throw error;
 
       // Get the user name for the webhook
       const assignedUser = users.find(u => u.id === parseInt(newTask.user_id));
+      const taskId = data?.[0]?.id;
 
       // Send data to webhook
       try {
@@ -254,6 +255,7 @@ const Index = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
+            id: taskId,
             title: newTask.title,
             description: newTask.description,
             user_id: parseInt(newTask.user_id),
