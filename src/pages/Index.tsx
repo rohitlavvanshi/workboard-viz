@@ -238,6 +238,31 @@ const Index = () => {
 
       if (error) throw error;
 
+      // Get the user name for the webhook
+      const assignedUser = users.find(u => u.id === parseInt(newTask.user_id));
+
+      // Send data to webhook
+      try {
+        await fetch("https://alpharc.app.n8n.cloud/webhook/ad751273-410c-46d2-a41e-b3ae9f53e8ff", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            title: newTask.title,
+            description: newTask.description,
+            user_id: parseInt(newTask.user_id),
+            user_name: assignedUser?.name || "Unknown User",
+            frequency: newTask.frequency,
+            status: "pending",
+            created_at: new Date().toISOString(),
+          }),
+        });
+      } catch (webhookError) {
+        console.error("Error sending to webhook:", webhookError);
+        // Don't show error to user as task was created successfully
+      }
+
       toast({
         title: "Success",
         description: "Task created successfully",
