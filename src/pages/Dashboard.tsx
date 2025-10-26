@@ -35,7 +35,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { Plus, MessageSquare, User, Calendar, CalendarIcon, Search, X } from "lucide-react";
+import { Plus, User, Calendar, CalendarIcon, Search, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -457,13 +457,12 @@ const Index = () => {
                   <TableHead>Status</TableHead>
                   <TableHead>Priority</TableHead>
                   <TableHead>Created</TableHead>
-                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredTasks.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                       No tasks found
                     </TableCell>
                   </TableRow>
@@ -536,16 +535,6 @@ const Index = () => {
                           <Calendar className="h-4 w-4 text-muted-foreground" />
                           {formatDate(task.created_at)}
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleViewChatHistory(task)}
-                        >
-                          <MessageSquare className="h-4 w-4 mr-2" />
-                          View Chat
-                        </Button>
                       </TableCell>
                     </TableRow>
                   ))
