@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users as UsersIcon, Mail, Briefcase, Plus, Trash2 } from "lucide-react";
+import { Users as UsersIcon, Mail, Briefcase, Plus, Trash2, MessageSquare } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -30,6 +30,7 @@ interface User {
   phone: string | null;
   role: string | null;
   created_at: string;
+  chat_history: string | null;
 }
 
 interface TaskCount {
@@ -51,6 +52,8 @@ const Users = () => {
   const [submitting, setSubmitting] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [chatHistoryOpen, setChatHistoryOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -322,6 +325,7 @@ const Users = () => {
                       <TableHead>Phone</TableHead>
                       <TableHead>Role</TableHead>
                       <TableHead className="text-right">Total Tasks</TableHead>
+                      <TableHead className="text-right">Chat History</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -358,6 +362,19 @@ const Users = () => {
                           <Badge variant="outline">
                             {taskCounts[user.id] || 0}
                           </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedUser(user);
+                              setChatHistoryOpen(true);
+                            }}
+                          >
+                            <MessageSquare className="h-4 w-4 mr-2" />
+                            View Chat
+                          </Button>
                         </TableCell>
                         <TableCell className="text-right">
                           <Button
@@ -398,6 +415,33 @@ const Users = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Chat History Dialog */}
+      <Dialog open={chatHistoryOpen} onOpenChange={setChatHistoryOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>{selectedUser?.name || "Employee"} - Chat History</DialogTitle>
+          </DialogHeader>
+          {selectedUser && (
+            <div className="space-y-4 overflow-y-auto pr-2">
+              <div>
+                <h4 className="font-semibold mb-2">Employee Details</h4>
+                <div className="space-y-1 text-sm text-muted-foreground">
+                  <p><span className="font-medium">Name:</span> {selectedUser.name || "N/A"}</p>
+                  <p><span className="font-medium">Phone:</span> {selectedUser.phone || "N/A"}</p>
+                  <p><span className="font-medium">Role:</span> {selectedUser.role || "N/A"}</p>
+                </div>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-2">Chat History</h4>
+                <div className="rounded-md border bg-muted/50 p-4 text-sm max-h-64 overflow-y-auto whitespace-pre-wrap">
+                  {selectedUser.chat_history || "No chat history available"}
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
