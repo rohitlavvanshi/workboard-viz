@@ -64,7 +64,6 @@ const Index = () => {
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [nameFilter, setNameFilter] = useState<string>("");
   const [frequencyFilter, setFrequencyFilter] = useState<string>("all");
   const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
@@ -85,7 +84,7 @@ const Index = () => {
 
   useEffect(() => {
     filterTasks();
-  }, [tasks, statusFilter, priorityFilter, nameFilter, frequencyFilter, dateFilter]);
+  }, [tasks, statusFilter, nameFilter, frequencyFilter, dateFilter]);
 
   const fetchTasks = async () => {
     try {
@@ -133,10 +132,6 @@ const Index = () => {
 
     if (statusFilter !== "all") {
       filtered = filtered.filter((task) => task.status === statusFilter);
-    }
-
-    if (priorityFilter !== "all") {
-      filtered = filtered.filter((task) => task.chat_status === priorityFilter);
     }
 
     if (nameFilter) {
@@ -348,7 +343,6 @@ const Index = () => {
               size="sm"
               onClick={() => {
                 setStatusFilter("all");
-                setPriorityFilter("all");
                 setNameFilter("");
                 setFrequencyFilter("all");
                 setDateFilter(undefined);
@@ -360,7 +354,7 @@ const Index = () => {
             </Button>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Name/Title Search */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -382,19 +376,6 @@ const Index = () => {
                 <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="in progress">In Progress</SelectItem>
                 <SelectItem value="completed">Completed</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* Priority Filter */}
-            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filter by priority" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Priority</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="low">Low</SelectItem>
               </SelectContent>
             </Select>
 
@@ -455,14 +436,13 @@ const Index = () => {
                   <TableHead>Assigned To</TableHead>
                   <TableHead>Frequency</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Priority</TableHead>
                   <TableHead>Created</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredTasks.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                       No tasks found
                     </TableCell>
                   </TableRow>
@@ -522,13 +502,6 @@ const Index = () => {
                             <SelectItem value="completed">Completed</SelectItem>
                           </SelectContent>
                         </Select>
-                      </TableCell>
-                      <TableCell>
-                        {task.chat_status && (
-                          <Badge className={getPriorityColor(task.chat_status)}>
-                            {task.chat_status}
-                          </Badge>
-                        )}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2 text-sm">
