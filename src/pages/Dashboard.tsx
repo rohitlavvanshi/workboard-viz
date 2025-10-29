@@ -19,6 +19,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Table,
   TableBody,
   TableCell,
@@ -35,7 +45,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { Plus, User, Calendar, CalendarIcon, Search, X } from "lucide-react";
+import { Plus, User, Calendar, CalendarIcon, Search, X, Pencil, Trash2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -71,8 +81,18 @@ const Index = () => {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [chatHistoryOpen, setChatHistoryOpen] = useState(false);
   const [addTaskOpen, setAddTaskOpen] = useState(false);
+  const [editTaskOpen, setEditTaskOpen] = useState(false);
+  const [deleteTaskId, setDeleteTaskId] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newTask, setNewTask] = useState({
+    title: "",
+    description: "",
+    user_id: "",
+    frequency: "one_time",
+    scheduled_day: "",
+  });
+  const [editTask, setEditTask] = useState({
+    id: 0,
     title: "",
     description: "",
     user_id: "",
@@ -310,6 +330,103 @@ const Index = () => {
     setChatHistoryOpen(true);
   };
 
+  const handleEditTask = (task: Task) => {
+    setEditTask({
+      id: task.id,
+      title: task.title || "",
+      description: task.description || "",
+      user_id: task.user_id.toString(),
+      frequency: task.frequency || "one_time",
+      scheduled_day: task.scheduled_day?.toString() || "",
+    });
+    setEditTaskOpen(true);
+  };
+
+  const handleUpdateTask = async () => {
+    if (!editTask.title || !editTask.user_id) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (editTask.frequency !== "one_time" && !editTask.scheduled_day) {
+      toast({
+        title: "Error",
+        description: "Please select a day of the month for recurring tasks",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isSubmitting) return;
+
+    try {
+      setIsSubmitting(true);
+
+      const { error } = await supabase
+        .from("tasks")
+        .update({
+          title: editTask.title,
+          description: editTask.description,
+          user_id: parseInt(editTask.user_id),
+          frequency: editTask.frequency as any,
+          scheduled_day: editTask.frequency !== "one_time" && editTask.scheduled_day ? parseInt(editTask.scheduled_day) : null,
+        })
+        .eq("id", editTask.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Task updated successfully",
+      });
+
+      setEditTaskOpen(false);
+      fetchTasks();
+    } catch (error) {
+      console.error("Error updating task:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update task",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteTask = async () => {
+    if (!deleteTaskId) return;
+
+    try {
+      const { error } = await supabase
+        .from("tasks")
+        .delete()
+        .eq("id", deleteTaskId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Task deleted successfully",
+      });
+
+      fetchTasks();
+    } catch (error) {
+      console.error("Error deleting task:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete task",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleteTaskId(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -452,12 +569,13 @@ const Index = () => {
                   <TableHead>Frequency</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Created</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredTasks.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                       No tasks found
                     </TableCell>
                   </TableRow>
@@ -522,6 +640,24 @@ const Index = () => {
                         <div className="flex items-center gap-2 text-sm">
                           <Calendar className="h-4 w-4 text-muted-foreground" />
                           {formatDate(task.created_at)}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditTask(task)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setDeleteTaskId(task.id)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -638,6 +774,130 @@ const Index = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Task Dialog */}
+      <Dialog open={editTaskOpen} onOpenChange={setEditTaskOpen}>
+        <DialogContent className="max-w-md max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Edit Task</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 overflow-y-auto pr-2">
+            <div>
+              <Label htmlFor="edit-title">Title *</Label>
+              <Input
+                id="edit-title"
+                value={editTask.title}
+                onChange={(e) =>
+                  setEditTask({ ...editTask, title: e.target.value })
+                }
+                placeholder="Enter task title"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-description">Description</Label>
+              <Textarea
+                id="edit-description"
+                value={editTask.description}
+                onChange={(e) =>
+                  setEditTask({ ...editTask, description: e.target.value })
+                }
+                placeholder="Enter task description"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-user">Assign To *</Label>
+              <Select
+                value={editTask.user_id}
+                onValueChange={(value) =>
+                  setEditTask({ ...editTask, user_id: value })
+                }
+              >
+                <SelectTrigger id="edit-user">
+                  <SelectValue placeholder="Select employee" />
+                </SelectTrigger>
+                <SelectContent>
+                  {users.map((user) => (
+                    <SelectItem key={user.id} value={user.id.toString()}>
+                      {user.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="edit-frequency">Frequency</Label>
+              <Select
+                value={editTask.frequency}
+                onValueChange={(value) =>
+                  setEditTask({ ...editTask, frequency: value, scheduled_day: value === "one_time" ? "" : editTask.scheduled_day })
+                }
+              >
+                <SelectTrigger id="edit-frequency">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="one_time">One Time</SelectItem>
+                  <SelectItem value="monthly">Monthly</SelectItem>
+                  <SelectItem value="quarterly">Quarterly (3 months)</SelectItem>
+                  <SelectItem value="semi_annually">Semi-Annually (6 months)</SelectItem>
+                  <SelectItem value="annually">Annually</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {editTask.frequency !== "one_time" && (
+              <div>
+                <Label htmlFor="edit-scheduled_day">Day of Month *</Label>
+                <Select
+                  value={editTask.scheduled_day}
+                  onValueChange={(value) =>
+                    setEditTask({ ...editTask, scheduled_day: value })
+                  }
+                >
+                  <SelectTrigger id="edit-scheduled_day">
+                    <SelectValue placeholder="Select day" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[200px]">
+                    {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
+                      <SelectItem key={day} value={day.toString()}>
+                        {day}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Select which day of the month this recurring task should be created
+                </p>
+              </div>
+            )}
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setEditTaskOpen(false)} disabled={isSubmitting}>
+                Cancel
+              </Button>
+              <Button onClick={handleUpdateTask} disabled={isSubmitting}>
+                {isSubmitting ? "Updating..." : "Update Task"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteTaskId !== null} onOpenChange={() => setDeleteTaskId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Task</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this task? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteTask} className="bg-destructive text-destructive-foreground">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Chat History Dialog */}
       <Dialog open={chatHistoryOpen} onOpenChange={setChatHistoryOpen}>
