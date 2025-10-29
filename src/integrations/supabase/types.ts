@@ -120,6 +120,10 @@ export type Database = {
           description: string | null
           frequency: Database["public"]["Enums"]["task_frequency"] | null
           id: number
+          is_template: boolean | null
+          last_created_at: string | null
+          next_scheduled_at: string | null
+          parent_task_id: number | null
           scheduled_day: number | null
           status: string | null
           title: string | null
@@ -132,6 +136,10 @@ export type Database = {
           description?: string | null
           frequency?: Database["public"]["Enums"]["task_frequency"] | null
           id?: number
+          is_template?: boolean | null
+          last_created_at?: string | null
+          next_scheduled_at?: string | null
+          parent_task_id?: number | null
           scheduled_day?: number | null
           status?: string | null
           title?: string | null
@@ -144,12 +152,23 @@ export type Database = {
           description?: string | null
           frequency?: Database["public"]["Enums"]["task_frequency"] | null
           id?: number
+          is_template?: boolean | null
+          last_created_at?: string | null
+          next_scheduled_at?: string | null
+          parent_task_id?: number | null
           scheduled_day?: number | null
           status?: string | null
           title?: string | null
           user_id?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "tasks_parent_task_id_fkey"
+            columns: ["parent_task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "tasks_user_id_fkey"
             columns: ["user_id"]
@@ -205,6 +224,7 @@ export type Database = {
         | "quarterly"
         | "semi_annually"
         | "annually"
+        | "daily"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -340,6 +360,7 @@ export const Constants = {
         "quarterly",
         "semi_annually",
         "annually",
+        "daily",
       ],
     },
   },

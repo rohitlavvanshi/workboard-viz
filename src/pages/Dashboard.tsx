@@ -222,6 +222,8 @@ const Index = () => {
     switch (frequency) {
       case "one_time":
         return "One Time";
+      case "daily":
+        return "Daily";
       case "monthly":
         return "Monthly";
       case "quarterly":
@@ -245,8 +247,8 @@ const Index = () => {
       return;
     }
 
-    // Validate scheduled_day for recurring tasks
-    if (newTask.frequency !== "one_time" && !newTask.scheduled_day) {
+    // Validate scheduled_day for recurring tasks (except daily)
+    if (newTask.frequency !== "one_time" && newTask.frequency !== "daily" && !newTask.scheduled_day) {
       toast({
         title: "Error",
         description: "Please select a day of the month for recurring tasks",
@@ -260,13 +262,54 @@ const Index = () => {
     try {
       setIsSubmitting(true);
 
+      // Calculate next_scheduled_at for recurring tasks
+      const isRecurring = newTask.frequency !== "one_time";
+      let nextScheduledAt = null;
+
+      if (isRecurring) {
+        const now = new Date();
+        nextScheduledAt = new Date(now);
+
+        switch (newTask.frequency) {
+          case "daily":
+            nextScheduledAt.setDate(nextScheduledAt.getDate() + 1);
+            break;
+          case "monthly":
+            nextScheduledAt.setMonth(nextScheduledAt.getMonth() + 1);
+            if (newTask.scheduled_day) {
+              nextScheduledAt.setDate(Math.min(parseInt(newTask.scheduled_day), 28));
+            }
+            break;
+          case "quarterly":
+            nextScheduledAt.setMonth(nextScheduledAt.getMonth() + 3);
+            if (newTask.scheduled_day) {
+              nextScheduledAt.setDate(Math.min(parseInt(newTask.scheduled_day), 28));
+            }
+            break;
+          case "semi_annually":
+            nextScheduledAt.setMonth(nextScheduledAt.getMonth() + 6);
+            if (newTask.scheduled_day) {
+              nextScheduledAt.setDate(Math.min(parseInt(newTask.scheduled_day), 28));
+            }
+            break;
+          case "annually":
+            nextScheduledAt.setFullYear(nextScheduledAt.getFullYear() + 1);
+            if (newTask.scheduled_day) {
+              nextScheduledAt.setDate(Math.min(parseInt(newTask.scheduled_day), 28));
+            }
+            break;
+        }
+      }
+
       const { data, error } = await supabase.from("tasks").insert([{
         title: newTask.title,
         description: newTask.description,
         user_id: parseInt(newTask.user_id),
         frequency: newTask.frequency as any,
         status: "pending",
-        scheduled_day: newTask.frequency !== "one_time" && newTask.scheduled_day ? parseInt(newTask.scheduled_day) : null,
+        scheduled_day: newTask.frequency === "daily" || newTask.frequency === "one_time" ? null : (newTask.scheduled_day ? parseInt(newTask.scheduled_day) : null),
+        is_template: isRecurring,
+        next_scheduled_at: nextScheduledAt?.toISOString(),
       }]).select();
 
       if (error) throw error;
@@ -352,7 +395,8 @@ const Index = () => {
       return;
     }
 
-    if (editTask.frequency !== "one_time" && !editTask.scheduled_day) {
+    // Validate scheduled_day for recurring tasks (except daily)
+    if (editTask.frequency !== "one_time" && editTask.frequency !== "daily" && !editTask.scheduled_day) {
       toast({
         title: "Error",
         description: "Please select a day of the month for recurring tasks",
@@ -366,6 +410,45 @@ const Index = () => {
     try {
       setIsSubmitting(true);
 
+      // Recalculate next_scheduled_at if frequency changed
+      const isRecurring = editTask.frequency !== "one_time";
+      let nextScheduledAt = null;
+
+      if (isRecurring) {
+        const now = new Date();
+        nextScheduledAt = new Date(now);
+
+        switch (editTask.frequency) {
+          case "daily":
+            nextScheduledAt.setDate(nextScheduledAt.getDate() + 1);
+            break;
+          case "monthly":
+            nextScheduledAt.setMonth(nextScheduledAt.getMonth() + 1);
+            if (editTask.scheduled_day) {
+              nextScheduledAt.setDate(Math.min(parseInt(editTask.scheduled_day), 28));
+            }
+            break;
+          case "quarterly":
+            nextScheduledAt.setMonth(nextScheduledAt.getMonth() + 3);
+            if (editTask.scheduled_day) {
+              nextScheduledAt.setDate(Math.min(parseInt(editTask.scheduled_day), 28));
+            }
+            break;
+          case "semi_annually":
+            nextScheduledAt.setMonth(nextScheduledAt.getMonth() + 6);
+            if (editTask.scheduled_day) {
+              nextScheduledAt.setDate(Math.min(parseInt(editTask.scheduled_day), 28));
+            }
+            break;
+          case "annually":
+            nextScheduledAt.setFullYear(nextScheduledAt.getFullYear() + 1);
+            if (editTask.scheduled_day) {
+              nextScheduledAt.setDate(Math.min(parseInt(editTask.scheduled_day), 28));
+            }
+            break;
+        }
+      }
+
       const { error } = await supabase
         .from("tasks")
         .update({
@@ -373,7 +456,9 @@ const Index = () => {
           description: editTask.description,
           user_id: parseInt(editTask.user_id),
           frequency: editTask.frequency as any,
-          scheduled_day: editTask.frequency !== "one_time" && editTask.scheduled_day ? parseInt(editTask.scheduled_day) : null,
+          scheduled_day: editTask.frequency === "daily" || editTask.frequency === "one_time" ? null : (editTask.scheduled_day ? parseInt(editTask.scheduled_day) : null),
+          is_template: isRecurring,
+          next_scheduled_at: nextScheduledAt?.toISOString(),
         })
         .eq("id", editTask.id);
 
@@ -519,6 +604,7 @@ const Index = () => {
               <SelectContent>
                 <SelectItem value="all">All Frequencies</SelectItem>
                 <SelectItem value="one_time">One Time</SelectItem>
+                <SelectItem value="daily">Daily</SelectItem>
                 <SelectItem value="monthly">Monthly</SelectItem>
                 <SelectItem value="quarterly">Quarterly</SelectItem>
                 <SelectItem value="semi_annually">Semi-Annually</SelectItem>
@@ -723,7 +809,7 @@ const Index = () => {
               <Select
                 value={newTask.frequency}
                 onValueChange={(value) =>
-                  setNewTask({ ...newTask, frequency: value, scheduled_day: value === "one_time" ? "" : newTask.scheduled_day })
+                  setNewTask({ ...newTask, frequency: value, scheduled_day: (value === "one_time" || value === "daily") ? "" : newTask.scheduled_day })
                 }
               >
                 <SelectTrigger id="frequency">
@@ -731,6 +817,7 @@ const Index = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="one_time">One Time</SelectItem>
+                  <SelectItem value="daily">Daily</SelectItem>
                   <SelectItem value="monthly">Monthly</SelectItem>
                   <SelectItem value="quarterly">Quarterly (3 months)</SelectItem>
                   <SelectItem value="semi_annually">Semi-Annually (6 months)</SelectItem>
@@ -738,7 +825,7 @@ const Index = () => {
                 </SelectContent>
               </Select>
             </div>
-            {newTask.frequency !== "one_time" && (
+            {newTask.frequency !== "one_time" && newTask.frequency !== "daily" && (
               <div>
                 <Label htmlFor="scheduled_day">Day of Month *</Label>
                 <Select
@@ -829,7 +916,7 @@ const Index = () => {
               <Select
                 value={editTask.frequency}
                 onValueChange={(value) =>
-                  setEditTask({ ...editTask, frequency: value, scheduled_day: value === "one_time" ? "" : editTask.scheduled_day })
+                  setEditTask({ ...editTask, frequency: value, scheduled_day: (value === "one_time" || value === "daily") ? "" : editTask.scheduled_day })
                 }
               >
                 <SelectTrigger id="edit-frequency">
@@ -837,6 +924,7 @@ const Index = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="one_time">One Time</SelectItem>
+                  <SelectItem value="daily">Daily</SelectItem>
                   <SelectItem value="monthly">Monthly</SelectItem>
                   <SelectItem value="quarterly">Quarterly (3 months)</SelectItem>
                   <SelectItem value="semi_annually">Semi-Annually (6 months)</SelectItem>
@@ -844,7 +932,7 @@ const Index = () => {
                 </SelectContent>
               </Select>
             </div>
-            {editTask.frequency !== "one_time" && (
+            {editTask.frequency !== "one_time" && editTask.frequency !== "daily" && (
               <div>
                 <Label htmlFor="edit-scheduled_day">Day of Month *</Label>
                 <Select

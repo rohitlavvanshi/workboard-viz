@@ -233,6 +233,8 @@ const Users = () => {
     switch (frequency) {
       case "one_time":
         return "One Time";
+      case "daily":
+        return "Daily";
       case "monthly":
         return "Monthly";
       case "quarterly":

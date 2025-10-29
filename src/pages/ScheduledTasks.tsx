@@ -119,6 +119,7 @@ const ScheduledTasks = () => {
   const getFrequencyLabel = (frequency: string | null) => {
     const labels: Record<string, string> = {
       one_time: "One Time",
+      daily: "Daily",
       monthly: "Monthly",
       quarterly: "Quarterly",
       semi_annually: "Semi-Annually",
