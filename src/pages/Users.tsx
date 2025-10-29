@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users as UsersIcon, Mail, Briefcase, Plus, Trash2, MessageSquare } from "lucide-react";
+import { Users as UsersIcon, Mail, Briefcase, Plus, Trash2, MessageSquare, ListTodo } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -38,6 +38,15 @@ interface TaskCount {
   count: number;
 }
 
+interface Task {
+  id: number;
+  title: string | null;
+  description: string | null;
+  status: string | null;
+  frequency: string | null;
+  created_at: string;
+}
+
 const formSchema = z.object({
   name: z.string().trim().min(1, { message: "Name is required" }).max(100, { message: "Name must be less than 100 characters" }),
   countryCode: z.string().trim().min(1, { message: "Country code is required" }),
@@ -54,6 +63,8 @@ const Users = () => {
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [chatHistoryOpen, setChatHistoryOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [tasksDialogOpen, setTasksDialogOpen] = useState(false);
+  const [userTasks, setUserTasks] = useState<Task[]>([]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -195,6 +206,55 @@ const Users = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const fetchUserTasks = async (userId: number) => {
+    try {
+      const { data, error } = await supabase
+        .from("tasks")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      setUserTasks(data || []);
+    } catch (error) {
+      console.error("Error fetching user tasks:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch tasks",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const getFrequencyLabel = (frequency: string | null) => {
+    switch (frequency) {
+      case "one_time":
+        return "One Time";
+      case "monthly":
+        return "Monthly";
+      case "quarterly":
+        return "Quarterly";
+      case "semi_annually":
+        return "Semi-Annually";
+      case "annually":
+        return "Annually";
+      default:
+        return "One Time";
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   if (loading) {
@@ -377,14 +437,28 @@ const Users = () => {
                           </Button>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteClick(user)}
-                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedUser(user);
+                                fetchUserTasks(user.id);
+                                setTasksDialogOpen(true);
+                              }}
+                            >
+                              <ListTodo className="h-4 w-4 mr-2" />
+                              View Tasks
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteClick(user)}
+                              className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -440,6 +514,65 @@ const Users = () => {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Tasks Dialog */}
+      <Dialog open={tasksDialogOpen} onOpenChange={setTasksDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>{selectedUser?.name || "Employee"} - Tasks</DialogTitle>
+            <DialogDescription>
+              All tasks assigned to this employee
+            </DialogDescription>
+          </DialogHeader>
+          <div className="overflow-y-auto pr-2">
+            {userTasks.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <ListTodo className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No tasks assigned to this employee</p>
+              </div>
+            ) : (
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Frequency</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Created</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {userTasks.map((task) => (
+                      <TableRow key={task.id}>
+                        <TableCell className="font-medium">
+                          {task.title || "Untitled"}
+                        </TableCell>
+                        <TableCell className="max-w-xs truncate">
+                          {task.description || "No description"}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">
+                            {getFrequencyLabel(task.frequency)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={task.status === "completed" ? "default" : "outline"}>
+                            {task.status?.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') || "Pending"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {formatDate(task.created_at)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
