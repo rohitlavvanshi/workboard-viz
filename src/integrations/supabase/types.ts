@@ -120,6 +120,7 @@ export type Database = {
           description: string | null
           frequency: Database["public"]["Enums"]["task_frequency"] | null
           id: number
+          scheduled_day: number | null
           status: string | null
           title: string | null
           user_id: number
@@ -131,6 +132,7 @@ export type Database = {
           description?: string | null
           frequency?: Database["public"]["Enums"]["task_frequency"] | null
           id?: number
+          scheduled_day?: number | null
           status?: string | null
           title?: string | null
           user_id: number
@@ -142,6 +144,7 @@ export type Database = {
           description?: string | null
           frequency?: Database["public"]["Enums"]["task_frequency"] | null
           id?: number
+          scheduled_day?: number | null
           status?: string | null
           title?: string | null
           user_id?: number

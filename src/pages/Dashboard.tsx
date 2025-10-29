@@ -51,6 +51,7 @@ interface Task {
   user_id: number;
   user_name?: string;
   frequency?: string | null;
+  scheduled_day?: number | null;
 }
 
 interface User {
@@ -76,6 +77,7 @@ const Index = () => {
     description: "",
     user_id: "",
     frequency: "one_time",
+    scheduled_day: "",
   });
 
   useEffect(() => {
@@ -223,6 +225,16 @@ const Index = () => {
       return;
     }
 
+    // Validate scheduled_day for recurring tasks
+    if (newTask.frequency !== "one_time" && !newTask.scheduled_day) {
+      toast({
+        title: "Error",
+        description: "Please select a day of the month for recurring tasks",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (isSubmitting) return;
 
     try {
@@ -234,6 +246,7 @@ const Index = () => {
         user_id: parseInt(newTask.user_id),
         frequency: newTask.frequency as any,
         status: "pending",
+        scheduled_day: newTask.frequency !== "one_time" && newTask.scheduled_day ? parseInt(newTask.scheduled_day) : null,
       }]).select();
 
       if (error) throw error;
@@ -256,6 +269,7 @@ const Index = () => {
             user_id: parseInt(newTask.user_id),
             user_name: assignedUser?.name || "Unknown User",
             frequency: newTask.frequency,
+            scheduled_day: newTask.frequency !== "one_time" && newTask.scheduled_day ? parseInt(newTask.scheduled_day) : null,
             status: "pending",
             created_at: new Date().toISOString(),
           }),
@@ -276,6 +290,7 @@ const Index = () => {
         description: "",
         user_id: "",
         frequency: "one_time",
+        scheduled_day: "",
       });
       fetchTasks();
     } catch (error) {
@@ -572,7 +587,7 @@ const Index = () => {
               <Select
                 value={newTask.frequency}
                 onValueChange={(value) =>
-                  setNewTask({ ...newTask, frequency: value })
+                  setNewTask({ ...newTask, frequency: value, scheduled_day: value === "one_time" ? "" : newTask.scheduled_day })
                 }
               >
                 <SelectTrigger id="frequency">
@@ -587,6 +602,31 @@ const Index = () => {
                 </SelectContent>
               </Select>
             </div>
+            {newTask.frequency !== "one_time" && (
+              <div>
+                <Label htmlFor="scheduled_day">Day of Month *</Label>
+                <Select
+                  value={newTask.scheduled_day}
+                  onValueChange={(value) =>
+                    setNewTask({ ...newTask, scheduled_day: value })
+                  }
+                >
+                  <SelectTrigger id="scheduled_day">
+                    <SelectValue placeholder="Select day" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[200px]">
+                    {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
+                      <SelectItem key={day} value={day.toString()}>
+                        {day}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Select which day of the month this recurring task should be created
+                </p>
+              </div>
+            )}
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setAddTaskOpen(false)} disabled={isSubmitting}>
                 Cancel
