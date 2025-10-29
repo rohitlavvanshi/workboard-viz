@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Users from "./pages/Users";
+import ScheduledTasks from "./pages/ScheduledTasks";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -32,6 +33,14 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <Users />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/scheduled-tasks"
+            element={
+              <ProtectedRoute>
+                <ScheduledTasks />
               </ProtectedRoute>
             }
           />
