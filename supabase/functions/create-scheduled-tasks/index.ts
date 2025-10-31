@@ -37,6 +37,15 @@ Deno.serve(async (req) => {
       throw fetchError;
     }
 
+    // Fetch all users to get names for webhook
+    const { data: users, error: usersError } = await supabase
+      .from('users')
+      .select('id, name');
+
+    if (usersError) {
+      console.error('Error fetching users:', usersError);
+    }
+
     console.log(`Found ${templateTasks?.length || 0} template tasks to process`);
 
     const createdTasks = [];
@@ -75,6 +84,34 @@ Deno.serve(async (req) => {
 
         console.log(`Created task instance: ${createdTask.id}`);
         createdTasks.push(createdTask);
+
+        // Send webhook notification
+        try {
+          const assignedUser = users?.find((u: any) => u.id === template.user_id);
+          
+          await fetch("https://alpharc.app.n8n.cloud/webhook/ad751273-410c-46d2-a41e-b3ae9f53e8ff", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              id: createdTask.id,
+              title: createdTask.title,
+              description: createdTask.description,
+              user_id: createdTask.user_id,
+              user_name: assignedUser?.name || "Unknown User",
+              frequency: createdTask.frequency,
+              scheduled_day: createdTask.scheduled_day,
+              status: createdTask.status,
+              created_at: createdTask.created_at,
+            }),
+          });
+          
+          console.log(`Webhook sent for task ${createdTask.id}`);
+        } catch (webhookError) {
+          console.error(`Error sending webhook for task ${createdTask.id}:`, webhookError);
+          // Don't fail the entire process if webhook fails
+        }
 
         // Calculate next scheduled date based on frequency
         let nextScheduledAt: Date | null = new Date(now);
