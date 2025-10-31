@@ -56,7 +56,7 @@ const ScheduledTasks = () => {
       const { data, error } = await supabase
         .from("tasks")
         .select("*")
-        .neq("frequency", "one_time")
+        .eq("is_template", true)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
