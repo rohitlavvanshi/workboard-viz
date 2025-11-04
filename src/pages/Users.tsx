@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users as UsersIcon, Mail, Briefcase, Plus, Trash2, MessageSquare, ListTodo } from "lucide-react";
+import { Users as UsersIcon, Mail, Briefcase, Plus, Trash2, MessageSquare, ListTodo, Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -65,8 +65,19 @@ const Users = () => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [tasksDialogOpen, setTasksDialogOpen] = useState(false);
   const [userTasks, setUserTasks] = useState<Task[]>([]);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [userToEdit, setUserToEdit] = useState<User | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      countryCode: "+1",
+      phoneNumber: "",
+    },
+  });
+
+  const editForm = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
@@ -168,6 +179,60 @@ const Users = () => {
       toast({
         title: "Error",
         description: "Failed to add employee. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleEditClick = (user: User) => {
+    setUserToEdit(user);
+    // Parse phone number into country code and number
+    const phone = user.phone || "+1";
+    const match = phone.match(/^(\+\d+)(.*)$/);
+    const countryCode = match?.[1] || "+1";
+    const phoneNumber = match?.[2]?.trim() || "";
+    
+    editForm.reset({
+      name: user.name || "",
+      countryCode: countryCode,
+      phoneNumber: phoneNumber,
+    });
+    setEditDialogOpen(true);
+  };
+
+  const onEditSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (!userToEdit) return;
+    
+    try {
+      setSubmitting(true);
+      
+      const fullPhone = `${values.countryCode}${values.phoneNumber}`;
+
+      const { error } = await supabase
+        .from("users")
+        .update({
+          name: values.name,
+          phone: fullPhone,
+        })
+        .eq("id", userToEdit.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Employee updated successfully",
+      });
+
+      setEditDialogOpen(false);
+      editForm.reset();
+      fetchUsers();
+    } catch (error: any) {
+      console.error("Error updating employee:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update employee",
         variant: "destructive",
       });
     } finally {
@@ -455,6 +520,14 @@ const Users = () => {
                             <Button
                               variant="ghost"
                               size="icon"
+                              onClick={() => handleEditClick(user)}
+                              className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               onClick={() => handleDeleteClick(user)}
                               className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                             >
@@ -516,6 +589,75 @@ const Users = () => {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Employee Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit Employee</DialogTitle>
+            <DialogDescription>
+              Update employee information. All fields are required.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...editForm}>
+            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
+              <FormField
+                control={editForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter employee name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="grid grid-cols-3 gap-2">
+                <FormField
+                  control={editForm.control}
+                  name="countryCode"
+                  render={({ field }) => (
+                    <FormItem className="col-span-1">
+                      <FormLabel>Code *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="+1" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editForm.control}
+                  name="phoneNumber"
+                  render={({ field }) => (
+                    <FormItem className="col-span-2">
+                      <FormLabel>Phone Number *</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="1234567890" 
+                          {...field}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/\D/g, '');
+                            field.onChange(value);
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <DialogFooter>
+                <Button type="submit" disabled={submitting}>
+                  {submitting ? "Updating..." : "Update Employee"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
 
