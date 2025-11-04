@@ -120,10 +120,11 @@ const Index = () => {
 
       if (tasksError) throw tasksError;
 
-      // Fetch users to get names
+      // Fetch only employees (not managers)
       const { data: usersData, error: usersError } = await supabase
         .from("users")
-        .select("id, name");
+        .select("id, name, role")
+        .eq("role", "employee");
 
       if (usersError) throw usersError;
 
@@ -238,10 +239,10 @@ const Index = () => {
   };
 
   const handleAddTask = async () => {
-    if (!newTask.title || !newTask.user_id) {
+    if (!newTask.title) {
       toast({
         title: "Error",
-        description: "Please fill in all required fields",
+        description: "Please enter a task title",
         variant: "destructive",
       });
       return;
@@ -301,45 +302,51 @@ const Index = () => {
         }
       }
 
-      const { data, error } = await supabase.from("tasks").insert([{
+      // If no user selected or "all", assign to all employees
+      const targetUsers = !newTask.user_id || newTask.user_id === "all" 
+        ? users 
+        : users.filter(u => u.id === parseInt(newTask.user_id));
+
+      const tasksToCreate = targetUsers.map(user => ({
         title: newTask.title,
         description: newTask.description,
-        user_id: parseInt(newTask.user_id),
+        user_id: user.id,
         frequency: newTask.frequency as any,
         status: "pending",
         scheduled_day: newTask.frequency === "daily" || newTask.frequency === "one_time" ? null : (newTask.scheduled_day ? parseInt(newTask.scheduled_day) : null),
         is_template: isRecurring,
         next_scheduled_at: nextScheduledAt?.toISOString(),
-      }]).select();
+      }));
+
+      const { data, error } = await supabase.from("tasks").insert(tasksToCreate).select();
 
       if (error) throw error;
 
-      // Get the user name for the webhook
-      const assignedUser = users.find(u => u.id === parseInt(newTask.user_id));
-      const taskId = data?.[0]?.id;
-
-      // Send data to webhook
-      try {
-        await fetch("https://alpharc.app.n8n.cloud/webhook/ad751273-410c-46d2-a41e-b3ae9f53e8ff", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            id: taskId,
-            title: newTask.title,
-            description: newTask.description,
-            user_id: parseInt(newTask.user_id),
-            user_name: assignedUser?.name || "Unknown User",
-            frequency: newTask.frequency,
-            scheduled_day: newTask.frequency !== "one_time" && newTask.scheduled_day ? parseInt(newTask.scheduled_day) : null,
-            status: "pending",
-            created_at: new Date().toISOString(),
-          }),
-        });
-      } catch (webhookError) {
-        console.error("Error sending to webhook:", webhookError);
-        // Don't show error to user as task was created successfully
+      // Send webhook for each created task
+      for (const task of data || []) {
+        const assignedUser = users.find(u => u.id === task.user_id);
+        
+        try {
+          await fetch("https://alpharc.app.n8n.cloud/webhook/ad751273-410c-46d2-a41e-b3ae9f53e8ff", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              id: task.id,
+              title: task.title,
+              description: task.description,
+              user_id: task.user_id,
+              user_name: assignedUser?.name || "Unknown User",
+              frequency: task.frequency,
+              scheduled_day: task.scheduled_day,
+              status: task.status,
+              created_at: task.created_at,
+            }),
+          });
+        } catch (webhookError) {
+          console.error("Error sending to webhook:", webhookError);
+        }
       }
 
       toast({
@@ -785,7 +792,7 @@ const Index = () => {
               />
             </div>
             <div>
-              <Label htmlFor="user">Assign To *</Label>
+              <Label htmlFor="user">Assign To</Label>
               <Select
                 value={newTask.user_id}
                 onValueChange={(value) =>
@@ -793,9 +800,10 @@ const Index = () => {
                 }
               >
                 <SelectTrigger id="user">
-                  <SelectValue placeholder="Select employee" />
+                  <SelectValue placeholder="All Employees" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="all">All Employees</SelectItem>
                   {users.map((user) => (
                     <SelectItem key={user.id} value={user.id.toString()}>
                       {user.name}
