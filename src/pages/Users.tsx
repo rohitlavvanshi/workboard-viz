@@ -203,10 +203,16 @@ const Users = () => {
   const handleEditClick = (user: User) => {
     setUserToEdit(user);
     // Parse phone number into country code and number
-    const phone = user.phone || "+1";
-    const match = phone.match(/^(\+\d+)(.*)$/);
-    const countryCode = match?.[1] || "+1";
-    const phoneNumber = match?.[2]?.trim() || "";
+    let phone = user.phone || "";
+    
+    // Remove @c.us suffix if present
+    phone = phone.replace(/@c\.us$/, '');
+    
+    // Try to extract country code (1-3 digits) and the rest
+    // Assuming common country codes are 1-3 digits
+    const match = phone.match(/^(\d{1,3})(\d+)$/);
+    const countryCode = match?.[1] ? `+${match[1]}` : "+1";
+    const phoneNumber = match?.[2] || phone;
     
     editForm.reset({
       name: user.name || "",
