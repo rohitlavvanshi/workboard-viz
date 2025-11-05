@@ -67,6 +67,7 @@ interface Task {
 interface User {
   id: number;
   name: string;
+  phone: string | null;
 }
 
 const Index = () => {
@@ -120,10 +121,10 @@ const Index = () => {
 
       if (tasksError) throw tasksError;
 
-      // Fetch only employees (not managers)
+      // Fetch only employees (not managers) with phone numbers
       const { data: usersData, error: usersError } = await supabase
         .from("users")
-        .select("id, name, role")
+        .select("id, name, phone, role")
         .eq("role", "employee");
 
       if (usersError) throw usersError;
@@ -322,7 +323,7 @@ const Index = () => {
 
       if (error) throw error;
 
-      // Send webhook for each created task
+      // Send webhook for each created task with the employee's phone number
       for (const task of data || []) {
         const assignedUser = users.find(u => u.id === task.user_id);
         
@@ -338,6 +339,7 @@ const Index = () => {
               description: task.description,
               user_id: task.user_id,
               user_name: assignedUser?.name || "Unknown User",
+              phone: assignedUser?.phone || null,
               frequency: task.frequency,
               scheduled_day: task.scheduled_day,
               status: task.status,
