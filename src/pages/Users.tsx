@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users as UsersIcon, Mail, Briefcase, Plus, Trash2, MessageSquare, ListTodo, Pencil } from "lucide-react";
+import { Users as UsersIcon, Mail, Briefcase, Plus, Trash2, MessageSquare, ListTodo, Pencil, Filter } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -23,6 +23,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "@/components/ui/use-toast";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface User {
   id: number;
@@ -31,6 +32,7 @@ interface User {
   role: string | null;
   created_at: string;
   chat_history: string | null;
+  category: string | null;
 }
 
 interface TaskCount {
@@ -51,10 +53,12 @@ const formSchema = z.object({
   name: z.string().trim().min(1, { message: "Name is required" }).max(100, { message: "Name must be less than 100 characters" }),
   countryCode: z.string().trim().min(1, { message: "Country code is required" }),
   phoneNumber: z.string().trim().min(1, { message: "Phone number is required" }).regex(/^\d+$/, { message: "Phone number must contain only numbers" }),
+  category: z.string().trim().min(1, { message: "Category is required" }).max(50, { message: "Category must be less than 50 characters" }),
 });
 
 const Users = () => {
   const [users, setUsers] = useState<User[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [taskCounts, setTaskCounts] = useState<Record<number, number>>({});
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
@@ -67,6 +71,8 @@ const Users = () => {
   const [userTasks, setUserTasks] = useState<Task[]>([]);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [userToEdit, setUserToEdit] = useState<User | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [categories, setCategories] = useState<string[]>([]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -74,6 +80,7 @@ const Users = () => {
       name: "",
       countryCode: "+1",
       phoneNumber: "",
+      category: "",
     },
   });
 
@@ -83,6 +90,7 @@ const Users = () => {
       name: "",
       countryCode: "+1",
       phoneNumber: "",
+      category: "",
     },
   });
 
@@ -135,8 +143,13 @@ const Users = () => {
         counts[task.user_id] = (counts[task.user_id] || 0) + 1;
       });
 
-      setUsers(usersData || []);
+      setUsers((usersData || []) as unknown as User[]);
+      setFilteredUsers((usersData || []) as unknown as User[]);
       setTaskCounts(counts);
+      
+      // Extract unique categories
+      const uniqueCategories = Array.from(new Set((usersData || []).map((u: any) => u.category).filter(Boolean) as string[]));
+      setCategories(uniqueCategories);
     } catch (error) {
       console.error("Error fetching users:", error);
     } finally {
@@ -163,6 +176,7 @@ const Users = () => {
           name: values.name,
           phone: fullPhone,
           role: "employee",
+          category: values.category,
         }]);
 
       if (error) throw error;
@@ -198,6 +212,7 @@ const Users = () => {
       name: user.name || "",
       countryCode: countryCode,
       phoneNumber: phoneNumber,
+      category: user.category || "",
     });
     setEditDialogOpen(true);
   };
@@ -215,6 +230,7 @@ const Users = () => {
         .update({
           name: values.name,
           phone: fullPhone,
+          category: values.category,
         })
         .eq("id", userToEdit.id);
 
@@ -294,6 +310,15 @@ const Users = () => {
     }
   };
 
+  const handleCategoryFilter = (category: string) => {
+    setCategoryFilter(category);
+    if (category === "all") {
+      setFilteredUsers(users);
+    } else {
+      setFilteredUsers(users.filter(user => user.category === category));
+    }
+  };
+
   const getFrequencyLabel = (frequency: string | null) => {
     switch (frequency) {
       case "one_time":
@@ -353,7 +378,7 @@ const Users = () => {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <div>
+              <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <UsersIcon className="h-6 w-6 text-primary" />
                   <CardTitle>Employees</CardTitle>
@@ -362,7 +387,24 @@ const Users = () => {
                   Manage and view all employees in your organization
                 </p>
               </div>
-              <Dialog open={open} onOpenChange={setOpen}>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-muted-foreground" />
+                  <Select value={categoryFilter} onValueChange={handleCategoryFilter}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Filter by category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Categories</SelectItem>
+                      {categories.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Dialog open={open} onOpenChange={setOpen}>
                 <DialogTrigger asChild>
                   <Button>
                     <Plus className="h-4 w-4 mr-2" />
@@ -423,41 +465,58 @@ const Users = () => {
                               </FormControl>
                               <FormMessage />
                             </FormItem>
-                          )}
-                        />
-                      </div>
-                      <DialogFooter>
-                        <Button type="submit" disabled={submitting}>
-                          {submitting ? "Adding..." : "Add Employee"}
-                        </Button>
-                      </DialogFooter>
-                    </form>
-                  </Form>
-                </DialogContent>
-              </Dialog>
+                           )}
+                         />
+                       </div>
+                       <FormField
+                         control={form.control}
+                         name="category"
+                         render={({ field }) => (
+                           <FormItem>
+                             <FormLabel>Category *</FormLabel>
+                             <FormControl>
+                               <Input placeholder="Enter category (e.g., Sales, IT, HR)" {...field} />
+                             </FormControl>
+                             <FormMessage />
+                           </FormItem>
+                         )}
+                       />
+                       <DialogFooter>
+                         <Button type="submit" disabled={submitting}>
+                           {submitting ? "Adding..." : "Add Employee"}
+                         </Button>
+                       </DialogFooter>
+                     </form>
+                   </Form>
+                  </DialogContent>
+                </Dialog>
+              </div>
             </div>
           </CardHeader>
-          <CardContent>
-            {users.length === 0 ? (
+           <CardContent>
+            {filteredUsers.length === 0 ? (
               <div className="text-center py-12">
                 <UsersIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">No employees found</p>
+                <p className="text-muted-foreground">
+                  {categoryFilter === "all" ? "No employees found" : `No employees found in "${categoryFilter}" category`}
+                </p>
               </div>
             ) : (
               <div className="rounded-md border">
                 <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Phone</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead className="text-right">Total Tasks</TableHead>
-                      <TableHead className="text-right">Chat History</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {users.map((user) => (
+                   <TableHeader>
+                     <TableRow>
+                       <TableHead>Name</TableHead>
+                       <TableHead>Phone</TableHead>
+                       <TableHead>Category</TableHead>
+                       <TableHead>Role</TableHead>
+                       <TableHead className="text-right">Total Tasks</TableHead>
+                       <TableHead className="text-right">Chat History</TableHead>
+                       <TableHead className="text-right">Actions</TableHead>
+                     </TableRow>
+                   </TableHeader>
+                   <TableBody>
+                     {filteredUsers.map((user) => (
                       <TableRow key={user.id}>
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-2">
@@ -469,14 +528,23 @@ const Users = () => {
                             {user.name || "N/A"}
                           </div>
                         </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <Mail className="h-4 w-4" />
-                            {user.phone || "N/A"}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {user.role ? (
+                         <TableCell>
+                           <div className="flex items-center gap-2 text-muted-foreground">
+                             <Mail className="h-4 w-4" />
+                             {user.phone || "N/A"}
+                           </div>
+                         </TableCell>
+                         <TableCell>
+                           {user.category ? (
+                             <Badge variant="outline" className="capitalize">
+                               {user.category}
+                             </Badge>
+                           ) : (
+                             <span className="text-muted-foreground">N/A</span>
+                           )}
+                         </TableCell>
+                         <TableCell>
+                           {user.role ? (
                             <Badge variant="secondary" className="capitalize">
                               <Briefcase className="h-3 w-3 mr-1" />
                               {user.role}
@@ -648,18 +716,31 @@ const Users = () => {
                       </FormControl>
                       <FormMessage />
                     </FormItem>
-                  )}
-                />
-              </div>
-              <DialogFooter>
-                <Button type="submit" disabled={submitting}>
-                  {submitting ? "Updating..." : "Update Employee"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+                           )}
+                         />
+                       </div>
+                       <FormField
+                         control={editForm.control}
+                         name="category"
+                         render={({ field }) => (
+                           <FormItem>
+                             <FormLabel>Category *</FormLabel>
+                             <FormControl>
+                               <Input placeholder="Enter category (e.g., Sales, IT, HR)" {...field} />
+                             </FormControl>
+                             <FormMessage />
+                           </FormItem>
+                         )}
+                       />
+                       <DialogFooter>
+                         <Button type="submit" disabled={submitting}>
+                           {submitting ? "Updating..." : "Update Employee"}
+                         </Button>
+                       </DialogFooter>
+                     </form>
+                   </Form>
+                 </DialogContent>
+               </Dialog>
 
       {/* Tasks Dialog */}
       <Dialog open={tasksDialogOpen} onOpenChange={setTasksDialogOpen}>
