@@ -37,10 +37,10 @@ Deno.serve(async (req) => {
       throw fetchError;
     }
 
-    // Fetch all users to get names for webhook
+    // Fetch all users to get names and phone numbers for webhook
     const { data: users, error: usersError } = await supabase
       .from('users')
-      .select('id, name');
+      .select('id, name, phone');
 
     if (usersError) {
       console.error('Error fetching users:', usersError);
@@ -100,6 +100,7 @@ Deno.serve(async (req) => {
               description: createdTask.description,
               user_id: createdTask.user_id,
               user_name: assignedUser?.name || "Unknown User",
+              phone: assignedUser?.phone || null,
               frequency: createdTask.frequency,
               scheduled_day: createdTask.scheduled_day,
               status: createdTask.status,
