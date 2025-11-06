@@ -17,98 +17,80 @@ export type Database = {
       chats: {
         Row: {
           chat_history: string | null
-          client: number | null
           created_at: string
           email: string | null
           id: number
           meeting_date: string | null
           name: string | null
+          notes: string | null
           phone: string | null
+          project_id: string | null
           reminder: string | null
           thread_id: string | null
         }
         Insert: {
           chat_history?: string | null
-          client?: number | null
           created_at?: string
           email?: string | null
           id?: number
           meeting_date?: string | null
           name?: string | null
+          notes?: string | null
           phone?: string | null
+          project_id?: string | null
           reminder?: string | null
           thread_id?: string | null
         }
         Update: {
           chat_history?: string | null
-          client?: number | null
           created_at?: string
           email?: string | null
           id?: number
           meeting_date?: string | null
           name?: string | null
+          notes?: string | null
           phone?: string | null
+          project_id?: string | null
           reminder?: string | null
           thread_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "chats_client_fkey"
-            columns: ["client"]
+            foreignKeyName: "chats_project_id_fkey"
+            columns: ["project_id"]
             isOneToOne: false
-            referencedRelation: "clients"
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
       }
-      clients: {
+      projects: {
         Row: {
-          client_name: string | null
-          "company name": string | null
           created_at: string
-          email: string | null
-          id: number
+          description: string | null
+          id: string
+          name: string
+          phone_number: string | null
+          updated_at: string
+          user_id: string
         }
         Insert: {
-          client_name?: string | null
-          "company name"?: string | null
           created_at?: string
-          email?: string | null
-          id?: number
+          description?: string | null
+          id?: string
+          name: string
+          phone_number?: string | null
+          updated_at?: string
+          user_id: string
         }
         Update: {
-          client_name?: string | null
-          "company name"?: string | null
           created_at?: string
-          email?: string | null
-          id?: number
-        }
-        Relationships: []
-      }
-      new_bot: {
-        Row: {
-          chathistory: string | null
-          created_at: string
-          id: number
-          name: string | null
-          phone: string | null
-          thread_id: string | null
-        }
-        Insert: {
-          chathistory?: string | null
-          created_at?: string
-          id?: number
-          name?: string | null
-          phone?: string | null
-          thread_id?: string | null
-        }
-        Update: {
-          chathistory?: string | null
-          created_at?: string
-          id?: number
-          name?: string | null
-          phone?: string | null
-          thread_id?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          phone_number?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -181,6 +163,7 @@ export type Database = {
       users: {
         Row: {
           auth_user_id: string | null
+          category: string | null
           chat_history: string | null
           created_at: string
           id: number
@@ -190,6 +173,7 @@ export type Database = {
         }
         Insert: {
           auth_user_id?: string | null
+          category?: string | null
           chat_history?: string | null
           created_at?: string
           id?: number
@@ -199,6 +183,7 @@ export type Database = {
         }
         Update: {
           auth_user_id?: string | null
+          category?: string | null
           chat_history?: string | null
           created_at?: string
           id?: number

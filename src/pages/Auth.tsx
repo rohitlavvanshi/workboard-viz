@@ -21,16 +21,20 @@ const Auth = () => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        // Verify manager role from users table
+        // Get user role from users table
         const { data: userData } = await supabase
           .from("users")
           .select("role")
           .eq("auth_user_id", session.user.id)
-          .eq("role", "manager")
           .maybeSingle();
 
         if (userData) {
-          navigate("/dashboard");
+          // Redirect based on role
+          if (userData.role === "manager") {
+            navigate("/dashboard");
+          } else if (userData.role === "employee") {
+            navigate("/employee-dashboard");
+          }
         }
       }
       setCheckingAuth(false);
@@ -63,7 +67,7 @@ const Auth = () => {
         console.log("Logged in user ID:", data.user.id);
         console.log("Logged in user email:", data.user.email);
         
-        // Verify user is a manager from users table
+        // Get user data from users table
         const { data: userData, error: userError } = await supabase
           .from("users")
           .select("id, role, name, auth_user_id")
@@ -97,23 +101,17 @@ const Auth = () => {
           return;
         }
 
-        if (userData.role !== "manager") {
-          await supabase.auth.signOut();
-          toast({
-            variant: "destructive",
-            title: "Access Denied",
-            description: `Only managers can access this system. Your role: ${userData.role}`,
-          });
-          console.log("User role is not manager:", userData.role);
-          setLoading(false);
-          return;
-        }
-
         toast({
           title: "Login Successful",
           description: `Welcome back${userData.name ? ', ' + userData.name : ''}!`,
         });
-        navigate("/dashboard");
+
+        // Redirect based on role
+        if (userData.role === "manager") {
+          navigate("/dashboard");
+        } else if (userData.role === "employee") {
+          navigate("/employee-dashboard");
+        }
       }
     } catch (error: any) {
       toast({
@@ -139,7 +137,7 @@ const Auth = () => {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-foreground mb-2">WorkBoard</h1>
-          <p className="text-muted-foreground">Manager Dashboard</p>
+          <p className="text-muted-foreground">Task Management System</p>
         </div>
         
         <Card className="shadow-xl border-border/50">

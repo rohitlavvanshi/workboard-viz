@@ -7,8 +7,10 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Users from "./pages/Users";
 import ScheduledTasks from "./pages/ScheduledTasks";
+import EmployeeDashboard from "./pages/EmployeeDashboard";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
+import EmployeeProtectedRoute from "./components/EmployeeProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +44,14 @@ const App = () => (
               <ProtectedRoute>
                 <ScheduledTasks />
               </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/employee-dashboard"
+            element={
+              <EmployeeProtectedRoute>
+                <EmployeeDashboard />
+              </EmployeeProtectedRoute>
             }
           />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
