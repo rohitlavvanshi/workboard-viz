@@ -5,15 +5,27 @@ import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Table,
   TableBody,
@@ -29,8 +41,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Briefcase, Pencil, Calendar, Users as UsersIcon } from "lucide-react";
 
 interface Client {
   id: string;
@@ -54,7 +67,18 @@ const Clients = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [clientToEdit, setClientToEdit] = useState<Client | null>(null);
   const [formData, setFormData] = useState({
+    name: "",
+    client_type: "",
+    services_provided: "",
+    service_start_date: "",
+    assigned_employee_id: "",
+  });
+  const [editFormData, setEditFormData] = useState({
     name: "",
     client_type: "",
     services_provided: "",
@@ -150,6 +174,41 @@ const Clients = () => {
     },
   });
 
+  const updateClient = useMutation({
+    mutationFn: async (data: { id: string; updates: typeof editFormData }) => {
+      const { error } = await supabase
+        .from("clients")
+        .update({
+          name: data.updates.name,
+          client_type: data.updates.client_type || null,
+          services_provided: data.updates.services_provided || null,
+          service_start_date: data.updates.service_start_date || null,
+          assigned_employee_id: data.updates.assigned_employee_id
+            ? parseInt(data.updates.assigned_employee_id)
+            : null,
+        })
+        .eq("id", data.id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
+      toast({
+        title: "Success",
+        description: "Client updated successfully",
+      });
+      setEditDialogOpen(false);
+      setClientToEdit(null);
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: `Failed to update client: ${error.message}`,
+      });
+    },
+  });
+
   const deleteClient = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("clients").delete().eq("id", id);
@@ -161,6 +220,8 @@ const Clients = () => {
         title: "Success",
         description: "Client deleted successfully",
       });
+      setDeleteDialogOpen(false);
+      setClientToDelete(null);
     },
     onError: (error) => {
       toast({
@@ -174,6 +235,36 @@ const Clients = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     createClient.mutate(formData);
+  };
+
+  const handleEditClick = (client: Client) => {
+    setClientToEdit(client);
+    setEditFormData({
+      name: client.name,
+      client_type: client.client_type || "",
+      services_provided: client.services_provided || "",
+      service_start_date: client.service_start_date || "",
+      assigned_employee_id: client.assigned_employee_id?.toString() || "",
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (clientToEdit) {
+      updateClient.mutate({ id: clientToEdit.id, updates: editFormData });
+    }
+  };
+
+  const handleDeleteClick = (client: Client) => {
+    setClientToDelete(client);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (clientToDelete) {
+      deleteClient.mutate(clientToDelete.id);
+    }
   };
 
   if (isLoading) {
@@ -202,136 +293,320 @@ const Clients = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
       <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Clients</h1>
-          <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Client
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add New Client</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <Label htmlFor="name">Name *</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                    required
-                  />
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <Briefcase className="h-6 w-6 text-primary" />
+                  <CardTitle>Clients</CardTitle>
                 </div>
-                <div>
-                  <Label htmlFor="client_type">Client Type</Label>
-                  <Input
-                    id="client_type"
-                    value={formData.client_type}
-                    onChange={(e) =>
-                      setFormData({ ...formData, client_type: e.target.value })
-                    }
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="services_provided">Services Provided</Label>
-                  <Input
-                    id="services_provided"
-                    value={formData.services_provided}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        services_provided: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="service_start_date">Service Start Date</Label>
-                  <Input
-                    id="service_start_date"
-                    type="date"
-                    value={formData.service_start_date}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        service_start_date: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="assigned_employee">Assign Employee</Label>
-                  <Select
-                    value={formData.assigned_employee_id}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, assigned_employee_id: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select an employee" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {employees?.map((employee) => (
-                        <SelectItem
-                          key={employee.id}
-                          value={employee.id.toString()}
-                        >
-                          {employee.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button type="submit" className="w-full">
-                  Create Client
-                </Button>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </div>
-
-        <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Client Type</TableHead>
-                <TableHead>Services Provided</TableHead>
-                <TableHead>Service Start Date</TableHead>
-                <TableHead>Assigned Employee</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {clients?.map((client) => (
-                <TableRow key={client.id}>
-                  <TableCell>{client.name}</TableCell>
-                  <TableCell>{client.client_type || "-"}</TableCell>
-                  <TableCell>{client.services_provided || "-"}</TableCell>
-                  <TableCell>
-                    {client.service_start_date
-                      ? new Date(client.service_start_date).toLocaleDateString()
-                      : "-"}
-                  </TableCell>
-                  <TableCell>{client.users?.name || "-"}</TableCell>
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => deleteClient.mutate(client.id)}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Manage and view all clients in your organization
+                </p>
+              </div>
+              <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Client
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add New Client</DialogTitle>
+                    <DialogDescription>
+                      Create a new client record. Name is required.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                      <Label htmlFor="name">Name *</Label>
+                      <Input
+                        id="name"
+                        value={formData.name}
+                        onChange={(e) =>
+                          setFormData({ ...formData, name: e.target.value })
+                        }
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="client_type">Client Type</Label>
+                      <Input
+                        id="client_type"
+                        value={formData.client_type}
+                        onChange={(e) =>
+                          setFormData({ ...formData, client_type: e.target.value })
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="services_provided">Services Provided</Label>
+                      <Input
+                        id="services_provided"
+                        value={formData.services_provided}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            services_provided: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="service_start_date">Service Start Date</Label>
+                      <Input
+                        id="service_start_date"
+                        type="date"
+                        value={formData.service_start_date}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            service_start_date: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="assigned_employee">Assign Employee</Label>
+                      <Select
+                        value={formData.assigned_employee_id}
+                        onValueChange={(value) =>
+                          setFormData({ ...formData, assigned_employee_id: value })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select an employee" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {employees?.map((employee) => (
+                            <SelectItem
+                              key={employee.id}
+                              value={employee.id.toString()}
+                            >
+                              {employee.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <DialogFooter>
+                      <Button type="submit" className="w-full">
+                        Create Client
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {!clients || clients.length === 0 ? (
+              <div className="text-center py-12">
+                <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">No clients found</p>
+              </div>
+            ) : (
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Client Type</TableHead>
+                      <TableHead>Services Provided</TableHead>
+                      <TableHead>Service Start Date</TableHead>
+                      <TableHead>Assigned Employee</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {clients?.map((client) => (
+                      <TableRow key={client.id}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                              <span className="text-sm font-semibold text-primary">
+                                {client.name?.charAt(0).toUpperCase() || "?"}
+                              </span>
+                            </div>
+                            {client.name}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {client.client_type ? (
+                            <Badge variant="outline" className="capitalize">
+                              {client.client_type}
+                            </Badge>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {client.services_provided || (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {client.service_start_date ? (
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <Calendar className="h-4 w-4" />
+                              {new Date(client.service_start_date).toLocaleDateString()}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {client.users?.name ? (
+                            <Badge variant="secondary" className="capitalize">
+                              <UsersIcon className="h-3 w-3 mr-1" />
+                              {client.users.name}
+                            </Badge>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEditClick(client)}
+                              className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteClick(client)}
+                              className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Client</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete {clientToDelete?.name}? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Edit Client Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Client</DialogTitle>
+            <DialogDescription>
+              Update client information. Name is required.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleEditSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="edit_name">Name *</Label>
+              <Input
+                id="edit_name"
+                value={editFormData.name}
+                onChange={(e) =>
+                  setEditFormData({ ...editFormData, name: e.target.value })
+                }
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit_client_type">Client Type</Label>
+              <Input
+                id="edit_client_type"
+                value={editFormData.client_type}
+                onChange={(e) =>
+                  setEditFormData({ ...editFormData, client_type: e.target.value })
+                }
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit_services_provided">Services Provided</Label>
+              <Input
+                id="edit_services_provided"
+                value={editFormData.services_provided}
+                onChange={(e) =>
+                  setEditFormData({
+                    ...editFormData,
+                    services_provided: e.target.value,
+                  })
+                }
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit_service_start_date">Service Start Date</Label>
+              <Input
+                id="edit_service_start_date"
+                type="date"
+                value={editFormData.service_start_date}
+                onChange={(e) =>
+                  setEditFormData({
+                    ...editFormData,
+                    service_start_date: e.target.value,
+                  })
+                }
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit_assigned_employee">Assign Employee</Label>
+              <Select
+                value={editFormData.assigned_employee_id}
+                onValueChange={(value) =>
+                  setEditFormData({ ...editFormData, assigned_employee_id: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select an employee" />
+                </SelectTrigger>
+                <SelectContent>
+                  {employees?.map((employee) => (
+                    <SelectItem
+                      key={employee.id}
+                      value={employee.id.toString()}
+                    >
+                      {employee.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <DialogFooter>
+              <Button type="submit" className="w-full">
+                Update Client
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
