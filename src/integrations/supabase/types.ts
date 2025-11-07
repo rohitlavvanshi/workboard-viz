@@ -64,6 +64,47 @@ export type Database = {
           },
         ]
       }
+      clients: {
+        Row: {
+          assigned_employee_id: number | null
+          client_type: string | null
+          created_at: string
+          id: string
+          name: string
+          service_start_date: string | null
+          services_provided: string | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_employee_id?: number | null
+          client_type?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          service_start_date?: string | null
+          services_provided?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_employee_id?: number | null
+          client_type?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          service_start_date?: string | null
+          services_provided?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clients_assigned_employee_id_fkey"
+            columns: ["assigned_employee_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           created_at: string
