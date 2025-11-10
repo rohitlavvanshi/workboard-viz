@@ -85,6 +85,8 @@ const Clients = () => {
     service_start_date: "",
     assigned_employee_id: "",
   });
+  const [filterClientType, setFilterClientType] = useState<string>("all");
+  const [filterServicesProvided, setFilterServicesProvided] = useState<string>("all");
 
   const { data: clients, isLoading, refetch } = useQuery({
     queryKey: ["clients"],
@@ -267,6 +269,24 @@ const Clients = () => {
     }
   };
 
+  // Get unique client types and services for filters
+  const uniqueClientTypes = Array.from(
+    new Set(clients?.map((c) => c.client_type).filter(Boolean))
+  );
+  const uniqueServices = Array.from(
+    new Set(clients?.map((c) => c.services_provided).filter(Boolean))
+  );
+
+  // Filter clients based on selected filters
+  const filteredClients = clients?.filter((client) => {
+    const matchesType =
+      filterClientType === "all" || client.client_type === filterClientType;
+    const matchesServices =
+      filterServicesProvided === "all" ||
+      client.services_provided === filterServicesProvided;
+    return matchesType && matchesServices;
+  });
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -295,7 +315,7 @@ const Clients = () => {
       <div className="container mx-auto px-4 py-8">
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-4">
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <Briefcase className="h-6 w-6 text-primary" />
@@ -400,6 +420,47 @@ const Clients = () => {
                 </DialogContent>
               </Dialog>
             </div>
+            <div className="flex items-center gap-3">
+              <div className="flex-1">
+                <Label htmlFor="filter-type" className="text-xs text-muted-foreground">
+                  Filter by Client Type
+                </Label>
+                <Select value={filterClientType} onValueChange={setFilterClientType}>
+                  <SelectTrigger id="filter-type">
+                    <SelectValue placeholder="All types" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All types</SelectItem>
+                    {uniqueClientTypes.map((type) => (
+                      <SelectItem key={type} value={type!}>
+                        {type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex-1">
+                <Label htmlFor="filter-services" className="text-xs text-muted-foreground">
+                  Filter by Services
+                </Label>
+                <Select
+                  value={filterServicesProvided}
+                  onValueChange={setFilterServicesProvided}
+                >
+                  <SelectTrigger id="filter-services">
+                    <SelectValue placeholder="All services" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All services</SelectItem>
+                    {uniqueServices.map((service) => (
+                      <SelectItem key={service} value={service!}>
+                        {service}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             {!clients || clients.length === 0 ? (
@@ -421,7 +482,7 @@ const Clients = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {clients?.map((client) => (
+                    {filteredClients?.map((client) => (
                       <TableRow key={client.id}>
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-2">
