@@ -67,6 +67,7 @@ export type Database = {
       clients: {
         Row: {
           assigned_employee_id: number | null
+          auth_user_id: string | null
           client_type: string | null
           created_at: string
           id: string
@@ -77,6 +78,7 @@ export type Database = {
         }
         Insert: {
           assigned_employee_id?: number | null
+          auth_user_id?: string | null
           client_type?: string | null
           created_at?: string
           id?: string
@@ -87,6 +89,7 @@ export type Database = {
         }
         Update: {
           assigned_employee_id?: number | null
+          auth_user_id?: string | null
           client_type?: string | null
           created_at?: string
           id?: string
@@ -139,6 +142,7 @@ export type Database = {
         Row: {
           chat_history: string | null
           chat_status: Database["public"]["Enums"]["chat_status"] | null
+          client_id: string | null
           created_at: string
           description: string | null
           frequency: Database["public"]["Enums"]["task_frequency"] | null
@@ -155,6 +159,7 @@ export type Database = {
         Insert: {
           chat_history?: string | null
           chat_status?: Database["public"]["Enums"]["chat_status"] | null
+          client_id?: string | null
           created_at?: string
           description?: string | null
           frequency?: Database["public"]["Enums"]["task_frequency"] | null
@@ -171,6 +176,7 @@ export type Database = {
         Update: {
           chat_history?: string | null
           chat_status?: Database["public"]["Enums"]["chat_status"] | null
+          client_id?: string | null
           created_at?: string
           description?: string | null
           frequency?: Database["public"]["Enums"]["task_frequency"] | null
@@ -185,6 +191,13 @@ export type Database = {
           user_id?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "tasks_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "tasks_parent_task_id_fkey"
             columns: ["parent_task_id"]
@@ -243,7 +256,7 @@ export type Database = {
     }
     Enums: {
       chat_status: "open" | "closed"
-      role: "employee" | "technician" | "manager"
+      role: "employee" | "technician" | "manager" | "client"
       task_frequency:
         | "one_time"
         | "monthly"
@@ -379,7 +392,7 @@ export const Constants = {
   public: {
     Enums: {
       chat_status: ["open", "closed"],
-      role: ["employee", "technician", "manager"],
+      role: ["employee", "technician", "manager", "client"],
       task_frequency: [
         "one_time",
         "monthly",
