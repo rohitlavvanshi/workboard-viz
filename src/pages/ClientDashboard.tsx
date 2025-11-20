@@ -225,11 +225,6 @@ const ClientDashboard = () => {
                 </h1>
                 <p className="text-sm text-muted-foreground">Client Portal</p>
               </div>
-              {clientInfo?.client_type && (
-                <Badge variant="secondary" className="ml-2">
-                  {clientInfo.client_type}
-                </Badge>
-              )}
             </div>
             <Button variant="outline" onClick={handleLogout}>
               <LogOut className="h-4 w-4 mr-2" />
