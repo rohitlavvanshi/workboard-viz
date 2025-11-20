@@ -33,15 +33,25 @@ const ClientDashboard = () => {
       if (session?.user) {
         setCurrentUserId(session.user.id);
         
-        // Get client ID
-        const { data: clientData } = await supabase
-          .from("clients")
-          .select("id")
+        // Get user info from users table
+        const { data: userData } = await supabase
+          .from("users")
+          .select("id, name")
           .eq("auth_user_id", session.user.id)
+          .eq("role", "client")
           .maybeSingle();
         
-        if (clientData) {
-          setClientId(clientData.id);
+        if (userData) {
+          // Check if there's a linked client record
+          const { data: clientData } = await supabase
+            .from("clients")
+            .select("id")
+            .eq("auth_user_id", session.user.id)
+            .maybeSingle();
+          
+          if (clientData) {
+            setClientId(clientData.id);
+          }
         }
       }
     };
@@ -49,16 +59,31 @@ const ClientDashboard = () => {
     getCurrentUser();
   }, []);
 
-  // Fetch client information
+  // Fetch client information from users table
   const { data: clientInfo, isLoading: isLoadingClient } = useQuery({
     queryKey: ["clientInfo", currentUserId],
     queryFn: async () => {
       if (!currentUserId) return null;
       
-      const { data, error } = await supabase
+      // Get user info from users table
+      const { data: userData, error: userError } = await supabase
+        .from("users")
+        .select("id, name, phone, category")
+        .eq("auth_user_id", currentUserId)
+        .eq("role", "client")
+        .maybeSingle();
+
+      if (userError) throw userError;
+      if (!userData) return null;
+
+      // Try to get additional client info from clients table if exists
+      const { data: clientData } = await supabase
         .from("clients")
         .select(`
-          *,
+          id,
+          services_provided,
+          service_start_date,
+          client_type,
           assigned_employee:assigned_employee_id (
             id,
             name
@@ -67,8 +92,17 @@ const ClientDashboard = () => {
         .eq("auth_user_id", currentUserId)
         .maybeSingle();
 
-      if (error) throw error;
-      return data;
+      // Merge user and client data
+      return {
+        id: userData.id,
+        name: userData.name,
+        phone: userData.phone,
+        category: userData.category,
+        services_provided: clientData?.services_provided,
+        service_start_date: clientData?.service_start_date,
+        client_type: clientData?.client_type,
+        assigned_employee: clientData?.assigned_employee,
+      };
     },
     enabled: !!currentUserId,
   });

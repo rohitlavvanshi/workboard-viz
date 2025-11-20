@@ -48,9 +48,10 @@ const ClientProtectedRoute = ({ children }: ClientProtectedRouteProps) => {
   const checkClientAccess = async (userId: string) => {
     try {
       const { data, error } = await supabase
-        .from("clients")
-        .select("id, name")
+        .from("users")
+        .select("id, role")
         .eq("auth_user_id", userId)
+        .eq("role", "client")
         .maybeSingle();
 
       setIsClient(!!data && !error);
