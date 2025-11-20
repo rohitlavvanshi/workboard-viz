@@ -21,6 +21,19 @@ const Auth = () => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
+        // Check if user is a client first
+        const { data: clientData } = await supabase
+          .from("clients")
+          .select("id")
+          .eq("auth_user_id", session.user.id)
+          .maybeSingle();
+
+        if (clientData) {
+          navigate("/client-dashboard");
+          setCheckingAuth(false);
+          return;
+        }
+
         // Get user role from users table
         const { data: userData } = await supabase
           .from("users")
@@ -67,6 +80,22 @@ const Auth = () => {
         console.log("Logged in user ID:", data.user.id);
         console.log("Logged in user email:", data.user.email);
         
+        // Check if user is a client first
+        const { data: clientData } = await supabase
+          .from("clients")
+          .select("id, name")
+          .eq("auth_user_id", data.user.id)
+          .maybeSingle();
+
+        if (clientData) {
+          toast({
+            title: "Login Successful",
+            description: `Welcome back${clientData.name ? ', ' + clientData.name : ''}!`,
+          });
+          navigate("/client-dashboard");
+          return;
+        }
+
         // Get user data from users table
         const { data: userData, error: userError } = await supabase
           .from("users")
