@@ -9,9 +9,11 @@ import Users from "./pages/Users";
 import Clients from "./pages/Clients";
 import ScheduledTasks from "./pages/ScheduledTasks";
 import EmployeeDashboard from "./pages/EmployeeDashboard";
+import ClientDashboard from "./pages/ClientDashboard";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import EmployeeProtectedRoute from "./components/EmployeeProtectedRoute";
+import ClientProtectedRoute from "./components/ClientProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -61,6 +63,14 @@ const App = () => (
               <EmployeeProtectedRoute>
                 <EmployeeDashboard />
               </EmployeeProtectedRoute>
+            }
+          />
+          <Route
+            path="/client-dashboard"
+            element={
+              <ClientProtectedRoute>
+                <ClientDashboard />
+              </ClientProtectedRoute>
             }
           />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
