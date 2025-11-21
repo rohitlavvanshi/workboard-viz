@@ -42,6 +42,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Trash2, Briefcase, Pencil, Calendar, Users as UsersIcon, X } from "lucide-react";
 
@@ -51,10 +52,7 @@ interface Client {
   client_type: string | null;
   services_provided: string[] | null;
   service_start_date: string | null;
-  assigned_employee_id: number | null;
-  users: {
-    name: string | null;
-  } | null;
+  assigned_employee_ids: number[] | null;
 }
 
 interface User {
@@ -76,14 +74,14 @@ const Clients = () => {
     client_type: "",
     services_provided: [] as string[],
     service_start_date: "",
-    assigned_employee_id: "",
+    assigned_employee_ids: [] as number[],
   });
   const [editFormData, setEditFormData] = useState({
     name: "",
     client_type: "",
     services_provided: [] as string[],
     service_start_date: "",
-    assigned_employee_id: "",
+    assigned_employee_ids: [] as number[],
   });
   const [filterClientType, setFilterClientType] = useState<string>("all");
   const [filterServicesProvided, setFilterServicesProvided] = useState<string>("all");
@@ -95,7 +93,7 @@ const Clients = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("clients")
-        .select("*, users(name)")
+        .select("*")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -146,9 +144,7 @@ const Clients = () => {
           client_type: newClient.client_type || null,
           services_provided: newClient.services_provided.length > 0 ? newClient.services_provided : null,
           service_start_date: newClient.service_start_date || null,
-          assigned_employee_id: newClient.assigned_employee_id
-            ? parseInt(newClient.assigned_employee_id)
-            : null,
+          assigned_employee_ids: newClient.assigned_employee_ids.length > 0 ? newClient.assigned_employee_ids : null,
         },
       ]);
 
@@ -166,7 +162,7 @@ const Clients = () => {
         client_type: "",
         services_provided: [],
         service_start_date: "",
-        assigned_employee_id: "",
+        assigned_employee_ids: [],
       });
     },
     onError: (error) => {
@@ -187,9 +183,7 @@ const Clients = () => {
           client_type: data.updates.client_type || null,
           services_provided: data.updates.services_provided.length > 0 ? data.updates.services_provided : null,
           service_start_date: data.updates.service_start_date || null,
-          assigned_employee_id: data.updates.assigned_employee_id
-            ? parseInt(data.updates.assigned_employee_id)
-            : null,
+          assigned_employee_ids: data.updates.assigned_employee_ids.length > 0 ? data.updates.assigned_employee_ids : null,
         })
         .eq("id", data.id);
 
@@ -248,7 +242,7 @@ const Clients = () => {
       client_type: client.client_type || "",
       services_provided: client.services_provided || [],
       service_start_date: client.service_start_date || "",
-      assigned_employee_id: client.assigned_employee_id?.toString() || "",
+      assigned_employee_ids: client.assigned_employee_ids || [],
     });
     setEditDialogOpen(true);
   };
@@ -458,27 +452,38 @@ const Clients = () => {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="assigned_employee">Assign Employee</Label>
-                      <Select
-                        value={formData.assigned_employee_id}
-                        onValueChange={(value) =>
-                          setFormData({ ...formData, assigned_employee_id: value })
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select an employee" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {employees?.map((employee) => (
-                            <SelectItem
-                              key={employee.id}
-                              value={employee.id.toString()}
+                      <Label>Assign Employees</Label>
+                      <div className="space-y-2 mt-2 max-h-48 overflow-y-auto border rounded-md p-3">
+                        {employees?.map((employee) => (
+                          <div key={employee.id} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`employee-${employee.id}`}
+                              checked={formData.assigned_employee_ids.includes(employee.id)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setFormData({
+                                    ...formData,
+                                    assigned_employee_ids: [...formData.assigned_employee_ids, employee.id],
+                                  });
+                                } else {
+                                  setFormData({
+                                    ...formData,
+                                    assigned_employee_ids: formData.assigned_employee_ids.filter(
+                                      (id) => id !== employee.id
+                                    ),
+                                  });
+                                }
+                              }}
+                            />
+                            <Label
+                              htmlFor={`employee-${employee.id}`}
+                              className="text-sm font-normal cursor-pointer"
                             >
                               {employee.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                     <DialogFooter>
                       <Button type="submit" className="w-full">
@@ -596,11 +601,18 @@ const Clients = () => {
                           )}
                         </TableCell>
                         <TableCell>
-                          {client.users?.name ? (
-                            <Badge variant="secondary" className="capitalize">
-                              <UsersIcon className="h-3 w-3 mr-1" />
-                              {client.users.name}
-                            </Badge>
+                          {client.assigned_employee_ids && client.assigned_employee_ids.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {client.assigned_employee_ids.map((employeeId) => {
+                                const employee = employees?.find((emp) => emp.id === employeeId);
+                                return (
+                                  <Badge key={employeeId} variant="secondary" className="text-xs">
+                                    <UsersIcon className="h-3 w-3 mr-1" />
+                                    {employee?.name || `Employee ${employeeId}`}
+                                  </Badge>
+                                );
+                              })}
+                            </div>
                           ) : (
                             <span className="text-muted-foreground">-</span>
                           )}
@@ -746,27 +758,38 @@ const Clients = () => {
               />
             </div>
             <div>
-              <Label htmlFor="edit_assigned_employee">Assign Employee</Label>
-              <Select
-                value={editFormData.assigned_employee_id}
-                onValueChange={(value) =>
-                  setEditFormData({ ...editFormData, assigned_employee_id: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select an employee" />
-                </SelectTrigger>
-                <SelectContent>
-                  {employees?.map((employee) => (
-                    <SelectItem
-                      key={employee.id}
-                      value={employee.id.toString()}
+              <Label>Assign Employees</Label>
+              <div className="space-y-2 mt-2 max-h-48 overflow-y-auto border rounded-md p-3">
+                {employees?.map((employee) => (
+                  <div key={employee.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`edit-employee-${employee.id}`}
+                      checked={editFormData.assigned_employee_ids.includes(employee.id)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setEditFormData({
+                            ...editFormData,
+                            assigned_employee_ids: [...editFormData.assigned_employee_ids, employee.id],
+                          });
+                        } else {
+                          setEditFormData({
+                            ...editFormData,
+                            assigned_employee_ids: editFormData.assigned_employee_ids.filter(
+                              (id) => id !== employee.id
+                            ),
+                          });
+                        }
+                      }}
+                    />
+                    <Label
+                      htmlFor={`edit-employee-${employee.id}`}
+                      className="text-sm font-normal cursor-pointer"
                     >
                       {employee.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                    </Label>
+                  </div>
+                ))}
+              </div>
             </div>
             <DialogFooter>
               <Button type="submit" className="w-full">

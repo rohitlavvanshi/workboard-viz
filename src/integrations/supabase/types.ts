@@ -66,7 +66,7 @@ export type Database = {
       }
       clients: {
         Row: {
-          assigned_employee_id: number | null
+          assigned_employee_ids: number[] | null
           auth_user_id: string | null
           client_type: string | null
           created_at: string
@@ -77,7 +77,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          assigned_employee_id?: number | null
+          assigned_employee_ids?: number[] | null
           auth_user_id?: string | null
           client_type?: string | null
           created_at?: string
@@ -88,7 +88,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          assigned_employee_id?: number | null
+          assigned_employee_ids?: number[] | null
           auth_user_id?: string | null
           client_type?: string | null
           created_at?: string
@@ -98,15 +98,7 @@ export type Database = {
           services_provided?: string[] | null
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "clients_assigned_employee_id_fkey"
-            columns: ["assigned_employee_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       projects: {
         Row: {
