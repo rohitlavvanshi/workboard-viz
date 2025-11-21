@@ -42,20 +42,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Trash2, Briefcase, Pencil, Calendar, Users as UsersIcon } from "lucide-react";
-
-const AVAILABLE_SERVICES = [
-  "SEO",
-  "Content Marketing",
-  "Social Media Management",
-  "Web Design",
-  "PPC Advertising",
-  "Email Marketing",
-  "Brand Strategy",
-  "Analytics & Reporting",
-];
+import { Plus, Trash2, Briefcase, Pencil, Calendar, Users as UsersIcon, X } from "lucide-react";
 
 interface Client {
   id: string;
@@ -99,6 +87,8 @@ const Clients = () => {
   });
   const [filterClientType, setFilterClientType] = useState<string>("all");
   const [filterServicesProvided, setFilterServicesProvided] = useState<string>("all");
+  const [newService, setNewService] = useState("");
+  const [editNewService, setEditNewService] = useState("");
 
   const { data: clients, isLoading, refetch } = useQuery({
     queryKey: ["clients"],
@@ -281,6 +271,42 @@ const Clients = () => {
     }
   };
 
+  const handleAddService = () => {
+    const trimmedService = newService.trim();
+    if (trimmedService && !formData.services_provided.includes(trimmedService)) {
+      setFormData({
+        ...formData,
+        services_provided: [...formData.services_provided, trimmedService],
+      });
+      setNewService("");
+    }
+  };
+
+  const handleAddEditService = () => {
+    const trimmedService = editNewService.trim();
+    if (trimmedService && !editFormData.services_provided.includes(trimmedService)) {
+      setEditFormData({
+        ...editFormData,
+        services_provided: [...editFormData.services_provided, trimmedService],
+      });
+      setEditNewService("");
+    }
+  };
+
+  const handleRemoveService = (serviceToRemove: string) => {
+    setFormData({
+      ...formData,
+      services_provided: formData.services_provided.filter((s) => s !== serviceToRemove),
+    });
+  };
+
+  const handleRemoveEditService = (serviceToRemove: string) => {
+    setEditFormData({
+      ...editFormData,
+      services_provided: editFormData.services_provided.filter((s) => s !== serviceToRemove),
+    });
+  };
+
   // Get unique client types and services for filters
   const uniqueClientTypes = Array.from(
     new Set(clients?.map((c) => c.client_type).filter(Boolean))
@@ -375,37 +401,47 @@ const Clients = () => {
                     </div>
                     <div>
                       <Label>Services Provided</Label>
-                      <div className="grid grid-cols-2 gap-3 mt-2">
-                        {AVAILABLE_SERVICES.map((service) => (
-                          <div key={service} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`service-${service}`}
-                              checked={formData.services_provided.includes(service)}
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  setFormData({
-                                    ...formData,
-                                    services_provided: [...formData.services_provided, service],
-                                  });
-                                } else {
-                                  setFormData({
-                                    ...formData,
-                                    services_provided: formData.services_provided.filter(
-                                      (s) => s !== service
-                                    ),
-                                  });
-                                }
-                              }}
-                            />
-                            <Label
-                              htmlFor={`service-${service}`}
-                              className="text-sm font-normal cursor-pointer"
+                      <div className="flex gap-2 mt-2">
+                        <Input
+                          placeholder="Enter service name..."
+                          value={newService}
+                          onChange={(e) => setNewService(e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleAddService();
+                            }
+                          }}
+                        />
+                        <Button 
+                          type="button" 
+                          onClick={handleAddService}
+                          variant="secondary"
+                        >
+                          Add
+                        </Button>
+                      </div>
+                      
+                      {formData.services_provided.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-3">
+                          {formData.services_provided.map((service, index) => (
+                            <Badge 
+                              key={index} 
+                              variant="secondary" 
+                              className="flex items-center gap-1 px-3 py-1"
                             >
                               {service}
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveService(service)}
+                                className="ml-1 hover:text-destructive"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <div>
                       <Label htmlFor="service_start_date">Service Start Date</Label>
@@ -653,37 +689,47 @@ const Clients = () => {
             </div>
             <div>
               <Label>Services Provided</Label>
-              <div className="grid grid-cols-2 gap-3 mt-2">
-                {AVAILABLE_SERVICES.map((service) => (
-                  <div key={service} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`edit-service-${service}`}
-                      checked={editFormData.services_provided.includes(service)}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setEditFormData({
-                            ...editFormData,
-                            services_provided: [...editFormData.services_provided, service],
-                          });
-                        } else {
-                          setEditFormData({
-                            ...editFormData,
-                            services_provided: editFormData.services_provided.filter(
-                              (s) => s !== service
-                            ),
-                          });
-                        }
-                      }}
-                    />
-                    <Label
-                      htmlFor={`edit-service-${service}`}
-                      className="text-sm font-normal cursor-pointer"
+              <div className="flex gap-2 mt-2">
+                <Input
+                  placeholder="Enter service name..."
+                  value={editNewService}
+                  onChange={(e) => setEditNewService(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddEditService();
+                    }
+                  }}
+                />
+                <Button 
+                  type="button" 
+                  onClick={handleAddEditService}
+                  variant="secondary"
+                >
+                  Add
+                </Button>
+              </div>
+              
+              {editFormData.services_provided.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {editFormData.services_provided.map((service, index) => (
+                    <Badge 
+                      key={index} 
+                      variant="secondary" 
+                      className="flex items-center gap-1 px-3 py-1"
                     >
                       {service}
-                    </Label>
-                  </div>
-                ))}
-              </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveEditService(service)}
+                        className="ml-1 hover:text-destructive"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
             </div>
             <div>
               <Label htmlFor="edit_service_start_date">Service Start Date</Label>
