@@ -84,13 +84,21 @@ const ClientDashboard = () => {
           services_provided,
           service_start_date,
           client_type,
-          assigned_employee:assigned_employee_id (
-            id,
-            name
-          )
+          assigned_employee_ids
         `)
         .eq("auth_user_id", currentUserId)
         .maybeSingle();
+
+      // Fetch employee names if assigned_employee_ids exists
+      let assignedEmployees = null;
+      if (clientData?.assigned_employee_ids && clientData.assigned_employee_ids.length > 0) {
+        const { data: employeesData } = await supabase
+          .from("users")
+          .select("id, name")
+          .in("id", clientData.assigned_employee_ids);
+        
+        assignedEmployees = employeesData;
+      }
 
       // Merge user and client data
       return {
@@ -101,7 +109,7 @@ const ClientDashboard = () => {
         services_provided: clientData?.services_provided,
         service_start_date: clientData?.service_start_date,
         client_type: clientData?.client_type,
-        assigned_employee: clientData?.assigned_employee,
+        assigned_employees: assignedEmployees,
       };
     },
     enabled: !!currentUserId,
@@ -268,12 +276,18 @@ const ClientDashboard = () => {
                 </div>
               )}
               
-              {clientInfo?.assigned_employee && (
+              {clientInfo?.assigned_employees && clientInfo.assigned_employees.length > 0 && (
                 <div className="flex items-start gap-3">
                   <User className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Assigned Employee</p>
-                    <p className="text-base text-foreground">{clientInfo.assigned_employee.name}</p>
+                    <p className="text-sm font-medium text-muted-foreground">Assigned Employees</p>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {clientInfo.assigned_employees.map((employee: { id: number; name: string | null }) => (
+                        <Badge key={employee.id} variant="secondary" className="text-xs">
+                          {employee.name}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
