@@ -42,6 +42,7 @@ interface User {
 const ScheduledTasks = () => {
   const [tasks, setTasks] = useState<ScheduledTask[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [clients, setClients] = useState<Array<{id: string, name: string}>>([]);
   const [loading, setLoading] = useState(true);
   const [deleteTaskId, setDeleteTaskId] = useState<number | null>(null);
   const { toast } = useToast();
@@ -49,13 +50,17 @@ const ScheduledTasks = () => {
   useEffect(() => {
     fetchScheduledTasks();
     fetchUsers();
+    fetchClients();
   }, []);
 
   const fetchScheduledTasks = async () => {
     try {
       const { data, error } = await supabase
         .from("tasks")
-        .select("*")
+        .select(`
+          *,
+          clients(name)
+        `)
         .eq("is_template", true)
         .order("created_at", { ascending: false });
 
@@ -84,6 +89,20 @@ const ScheduledTasks = () => {
       setUsers(data || []);
     } catch (error) {
       console.error("Error fetching users:", error);
+    }
+  };
+
+  const fetchClients = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("clients")
+        .select("id, name")
+        .order("name");
+
+      if (error) throw error;
+      setClients(data || []);
+    } catch (error) {
+      console.error("Error fetching clients:", error);
     }
   };
 
@@ -164,6 +183,7 @@ const ScheduledTasks = () => {
                   <TableHead>Title</TableHead>
                   <TableHead>Description</TableHead>
                   <TableHead>Assigned To</TableHead>
+                  <TableHead>Client</TableHead>
                   <TableHead>Frequency</TableHead>
                   <TableHead>Day of Month</TableHead>
                   <TableHead>Status</TableHead>
@@ -181,6 +201,13 @@ const ScheduledTasks = () => {
                       {task.description || "N/A"}
                     </TableCell>
                     <TableCell>{getUserName(task.user_id)}</TableCell>
+                    <TableCell>
+                      {(task as any).clients?.name ? (
+                        <Badge variant="outline">{(task as any).clients.name}</Badge>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">All Clients</span>
+                      )}
+                    </TableCell>
                     <TableCell>{getFrequencyLabel(task.frequency)}</TableCell>
                     <TableCell>
                       {task.scheduled_day ? `Day ${task.scheduled_day}` : "N/A"}

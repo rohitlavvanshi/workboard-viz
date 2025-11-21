@@ -9,7 +9,6 @@ const corsHeaders = {
 };
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -17,17 +16,13 @@ Deno.serve(async (req) => {
   try {
     console.log('Starting scheduled task creation job...');
     
-    // Create Supabase client with service role key for admin access
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Get current timestamp
     const now = new Date();
     console.log(`Current time: ${now.toISOString()}`);
 
-    // Query template tasks that are due for creation
     const { data: templateTasks, error: fetchError } = await supabase
       .from('tasks')
-      .select('*')
+      .select('*, clients(id, name)')
       .eq('is_template', true)
       .lte('next_scheduled_at', now.toISOString())
       .not('next_scheduled_at', 'is', null);
@@ -37,7 +32,6 @@ Deno.serve(async (req) => {
       throw fetchError;
     }
 
-    // Fetch all users to get names and phone numbers for webhook
     const { data: users, error: usersError } = await supabase
       .from('users')
       .select('id, name, phone');
@@ -46,75 +40,81 @@ Deno.serve(async (req) => {
       console.error('Error fetching users:', usersError);
     }
 
+    const { data: allClients } = await supabase
+      .from('clients')
+      .select('id, name');
+
     console.log(`Found ${templateTasks?.length || 0} template tasks to process`);
 
     const createdTasks = [];
     const errors = [];
 
-    // Process each template task
     for (const template of templateTasks || []) {
       try {
         console.log(`Processing template task: ${template.id} - ${template.title}`);
 
-        // Create new task instance
-        const newTask = {
-          user_id: template.user_id,
-          title: template.title,
-          description: template.description,
-          frequency: template.frequency,
-          scheduled_day: template.scheduled_day,
-          status: template.status,
-          chat_status: template.chat_status,
-          parent_task_id: template.id,
-          is_template: false,
-          created_at: now.toISOString(),
-        };
+        const targetClients = template.client_id 
+          ? [{ id: template.client_id }]
+          : allClients || [];
 
-        const { data: createdTask, error: insertError } = await supabase
-          .from('tasks')
-          .insert(newTask)
-          .select()
-          .single();
+        for (const client of targetClients) {
+          const newTask = {
+            user_id: template.user_id,
+            title: template.title,
+            description: template.description,
+            client_id: client.id,
+            frequency: template.frequency,
+            scheduled_day: template.scheduled_day,
+            status: template.status,
+            chat_status: template.chat_status,
+            parent_task_id: template.id,
+            is_template: false,
+            created_at: now.toISOString(),
+          };
 
-        if (insertError) {
-          console.error(`Error creating task instance for template ${template.id}:`, insertError);
-          errors.push({ templateId: template.id, error: insertError.message });
-          continue;
+          const { data: createdTask, error: insertError } = await supabase
+            .from('tasks')
+            .insert(newTask)
+            .select()
+            .single();
+
+          if (insertError) {
+            console.error(`Error creating task instance:`, insertError);
+            errors.push({ templateId: template.id, error: insertError.message });
+            continue;
+          }
+
+          console.log(`Created task instance: ${createdTask.id}`);
+          createdTasks.push(createdTask);
+
+          try {
+            const assignedUser = users?.find((u: any) => u.id === template.user_id);
+            const clientInfo = allClients?.find((c: any) => c.id === client.id);
+            
+            await fetch("https://alpharc.app.n8n.cloud/webhook/ad751273-410c-46d2-a41e-b3ae9f53e8ff", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                id: createdTask.id,
+                title: createdTask.title,
+                description: createdTask.description,
+                user_id: createdTask.user_id,
+                user_name: assignedUser?.name || "Unknown User",
+                phone: assignedUser?.phone || null,
+                client_name: clientInfo?.name || null,
+                frequency: createdTask.frequency,
+                scheduled_day: createdTask.scheduled_day,
+                status: createdTask.status,
+                created_at: createdTask.created_at,
+              }),
+            });
+            
+            console.log(`Webhook sent for task ${createdTask.id}`);
+          } catch (webhookError) {
+            console.error(`Error sending webhook:`, webhookError);
+          }
         }
 
-        console.log(`Created task instance: ${createdTask.id}`);
-        createdTasks.push(createdTask);
-
-        // Send webhook notification
-        try {
-          const assignedUser = users?.find((u: any) => u.id === template.user_id);
-          
-          await fetch("https://alpharc.app.n8n.cloud/webhook/ad751273-410c-46d2-a41e-b3ae9f53e8ff", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              id: createdTask.id,
-              title: createdTask.title,
-              description: createdTask.description,
-              user_id: createdTask.user_id,
-              user_name: assignedUser?.name || "Unknown User",
-              phone: assignedUser?.phone || null,
-              frequency: createdTask.frequency,
-              scheduled_day: createdTask.scheduled_day,
-              status: createdTask.status,
-              created_at: createdTask.created_at,
-            }),
-          });
-          
-          console.log(`Webhook sent for task ${createdTask.id}`);
-        } catch (webhookError) {
-          console.error(`Error sending webhook for task ${createdTask.id}:`, webhookError);
-          // Don't fail the entire process if webhook fails
-        }
-
-        // Calculate next scheduled date based on frequency
         let nextScheduledAt: Date | null = new Date(now);
         
         switch (template.frequency) {
@@ -124,7 +124,7 @@ Deno.serve(async (req) => {
           case 'monthly':
             nextScheduledAt.setMonth(nextScheduledAt.getMonth() + 1);
             if (template.scheduled_day) {
-              nextScheduledAt.setDate(Math.min(template.scheduled_day, 28)); // Avoid invalid dates
+              nextScheduledAt.setDate(Math.min(template.scheduled_day, 28));
             }
             break;
           case 'quarterly':
@@ -146,11 +146,9 @@ Deno.serve(async (req) => {
             }
             break;
           default:
-            // For one_time or unknown, don't schedule again
             nextScheduledAt = null;
         }
 
-        // Update template with new scheduling info
         const updateData: any = {
           last_created_at: now.toISOString(),
         };
@@ -174,7 +172,7 @@ Deno.serve(async (req) => {
         }
 
       } catch (error) {
-        console.error(`Error processing template ${template.id}:`, error);
+        console.error(`Error processing template:`, error);
         const errorMessage = error instanceof Error ? error.message : String(error);
         errors.push({ templateId: template.id, error: errorMessage });
       }
@@ -196,7 +194,7 @@ Deno.serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('Fatal error in create-scheduled-tasks function:', error);
+    console.error('Fatal error:', error);
     const errorMessage = error instanceof Error ? error.message : String(error);
     return new Response(
       JSON.stringify({ error: errorMessage }),
