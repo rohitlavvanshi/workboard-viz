@@ -42,14 +42,26 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Trash2, Briefcase, Pencil, Calendar, Users as UsersIcon } from "lucide-react";
+
+const AVAILABLE_SERVICES = [
+  "SEO",
+  "Content Marketing",
+  "Social Media Management",
+  "Web Design",
+  "PPC Advertising",
+  "Email Marketing",
+  "Brand Strategy",
+  "Analytics & Reporting",
+];
 
 interface Client {
   id: string;
   name: string;
   client_type: string | null;
-  services_provided: string | null;
+  services_provided: string[] | null;
   service_start_date: string | null;
   assigned_employee_id: number | null;
   users: {
@@ -74,14 +86,14 @@ const Clients = () => {
   const [formData, setFormData] = useState({
     name: "",
     client_type: "",
-    services_provided: "",
+    services_provided: [] as string[],
     service_start_date: "",
     assigned_employee_id: "",
   });
   const [editFormData, setEditFormData] = useState({
     name: "",
     client_type: "",
-    services_provided: "",
+    services_provided: [] as string[],
     service_start_date: "",
     assigned_employee_id: "",
   });
@@ -142,7 +154,7 @@ const Clients = () => {
         {
           name: newClient.name,
           client_type: newClient.client_type || null,
-          services_provided: newClient.services_provided || null,
+          services_provided: newClient.services_provided.length > 0 ? newClient.services_provided : null,
           service_start_date: newClient.service_start_date || null,
           assigned_employee_id: newClient.assigned_employee_id
             ? parseInt(newClient.assigned_employee_id)
@@ -162,7 +174,7 @@ const Clients = () => {
       setFormData({
         name: "",
         client_type: "",
-        services_provided: "",
+        services_provided: [],
         service_start_date: "",
         assigned_employee_id: "",
       });
@@ -183,7 +195,7 @@ const Clients = () => {
         .update({
           name: data.updates.name,
           client_type: data.updates.client_type || null,
-          services_provided: data.updates.services_provided || null,
+          services_provided: data.updates.services_provided.length > 0 ? data.updates.services_provided : null,
           service_start_date: data.updates.service_start_date || null,
           assigned_employee_id: data.updates.assigned_employee_id
             ? parseInt(data.updates.assigned_employee_id)
@@ -244,7 +256,7 @@ const Clients = () => {
     setEditFormData({
       name: client.name,
       client_type: client.client_type || "",
-      services_provided: client.services_provided || "",
+      services_provided: client.services_provided || [],
       service_start_date: client.service_start_date || "",
       assigned_employee_id: client.assigned_employee_id?.toString() || "",
     });
@@ -274,8 +286,8 @@ const Clients = () => {
     new Set(clients?.map((c) => c.client_type).filter(Boolean))
   );
   const uniqueServices = Array.from(
-    new Set(clients?.map((c) => c.services_provided).filter(Boolean))
-  );
+    new Set(clients?.flatMap((c) => c.services_provided || []))
+  ).sort();
 
   // Filter clients based on selected filters
   const filteredClients = clients?.filter((client) => {
@@ -283,7 +295,7 @@ const Clients = () => {
       filterClientType === "all" || client.client_type === filterClientType;
     const matchesServices =
       filterServicesProvided === "all" ||
-      client.services_provided === filterServicesProvided;
+      (client.services_provided?.includes(filterServicesProvided) ?? false);
     return matchesType && matchesServices;
   });
 
@@ -362,17 +374,38 @@ const Clients = () => {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="services_provided">Services Provided</Label>
-                      <Input
-                        id="services_provided"
-                        value={formData.services_provided}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            services_provided: e.target.value,
-                          })
-                        }
-                      />
+                      <Label>Services Provided</Label>
+                      <div className="grid grid-cols-2 gap-3 mt-2">
+                        {AVAILABLE_SERVICES.map((service) => (
+                          <div key={service} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`service-${service}`}
+                              checked={formData.services_provided.includes(service)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setFormData({
+                                    ...formData,
+                                    services_provided: [...formData.services_provided, service],
+                                  });
+                                } else {
+                                  setFormData({
+                                    ...formData,
+                                    services_provided: formData.services_provided.filter(
+                                      (s) => s !== service
+                                    ),
+                                  });
+                                }
+                              }}
+                            />
+                            <Label
+                              htmlFor={`service-${service}`}
+                              className="text-sm font-normal cursor-pointer"
+                            >
+                              {service}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                     <div>
                       <Label htmlFor="service_start_date">Service Start Date</Label>
@@ -504,7 +537,15 @@ const Clients = () => {
                           )}
                         </TableCell>
                         <TableCell>
-                          {client.services_provided || (
+                          {client.services_provided && client.services_provided.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {client.services_provided.map((service, idx) => (
+                                <Badge key={idx} variant="secondary" className="text-xs">
+                                  {service}
+                                </Badge>
+                              ))}
+                            </div>
+                          ) : (
                             <span className="text-muted-foreground">-</span>
                           )}
                         </TableCell>
@@ -611,17 +652,38 @@ const Clients = () => {
               />
             </div>
             <div>
-              <Label htmlFor="edit_services_provided">Services Provided</Label>
-              <Input
-                id="edit_services_provided"
-                value={editFormData.services_provided}
-                onChange={(e) =>
-                  setEditFormData({
-                    ...editFormData,
-                    services_provided: e.target.value,
-                  })
-                }
-              />
+              <Label>Services Provided</Label>
+              <div className="grid grid-cols-2 gap-3 mt-2">
+                {AVAILABLE_SERVICES.map((service) => (
+                  <div key={service} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`edit-service-${service}`}
+                      checked={editFormData.services_provided.includes(service)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setEditFormData({
+                            ...editFormData,
+                            services_provided: [...editFormData.services_provided, service],
+                          });
+                        } else {
+                          setEditFormData({
+                            ...editFormData,
+                            services_provided: editFormData.services_provided.filter(
+                              (s) => s !== service
+                            ),
+                          });
+                        }
+                      }}
+                    />
+                    <Label
+                      htmlFor={`edit-service-${service}`}
+                      className="text-sm font-normal cursor-pointer"
+                    >
+                      {service}
+                    </Label>
+                  </div>
+                ))}
+              </div>
             </div>
             <div>
               <Label htmlFor="edit_service_start_date">Service Start Date</Label>
