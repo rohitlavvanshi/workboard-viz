@@ -15,70 +15,79 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import EmployeeProtectedRoute from "./components/EmployeeProtectedRoute";
 import ClientProtectedRoute from "./components/ClientProtectedRoute";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5,
+      retry: 1,
+    },
+  },
+});
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Auth />} />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/users"
-            element={
-              <ProtectedRoute>
-                <Users />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/clients"
-            element={
-              <ProtectedRoute>
-                <Clients />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/scheduled-tasks"
-            element={
-              <ProtectedRoute>
-                <ScheduledTasks />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/employee-dashboard"
-            element={
-              <EmployeeProtectedRoute>
-                <EmployeeDashboard />
-              </EmployeeProtectedRoute>
-            }
-          />
-          <Route
-            path="/client-dashboard"
-            element={
-              <ClientProtectedRoute>
-                <ClientDashboard />
-              </ClientProtectedRoute>
-            }
-          />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Auth />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/users"
+              element={
+                <ProtectedRoute>
+                  <Users />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/clients"
+              element={
+                <ProtectedRoute>
+                  <Clients />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/scheduled-tasks"
+              element={
+                <ProtectedRoute>
+                  <ScheduledTasks />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/employee-dashboard"
+              element={
+                <EmployeeProtectedRoute>
+                  <EmployeeDashboard />
+                </EmployeeProtectedRoute>
+              }
+            />
+            <Route
+              path="/client-dashboard"
+              element={
+                <ClientProtectedRoute>
+                  <ClientDashboard />
+                </ClientProtectedRoute>
+              }
+            />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+}
 
 export default App;
