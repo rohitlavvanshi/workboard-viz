@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import {
   Dialog,
   DialogContent,
@@ -42,9 +44,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Trash2, Briefcase, Pencil, Calendar, Users as UsersIcon, X } from "lucide-react";
+import { Plus, Trash2, Briefcase, Pencil, Calendar, Users as UsersIcon, X, Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface Client {
   id: string;
@@ -453,37 +455,79 @@ const Clients = () => {
                     </div>
                     <div>
                       <Label>Assign Employees</Label>
-                      <div className="space-y-2 mt-2 max-h-48 overflow-y-auto border rounded-md p-3">
-                        {employees?.map((employee) => (
-                          <div key={employee.id} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`employee-${employee.id}`}
-                              checked={formData.assigned_employee_ids.includes(employee.id)}
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  setFormData({
-                                    ...formData,
-                                    assigned_employee_ids: [...formData.assigned_employee_ids, employee.id],
-                                  });
-                                } else {
-                                  setFormData({
-                                    ...formData,
-                                    assigned_employee_ids: formData.assigned_employee_ids.filter(
-                                      (id) => id !== employee.id
-                                    ),
-                                  });
-                                }
-                              }}
-                            />
-                            <Label
-                              htmlFor={`employee-${employee.id}`}
-                              className="text-sm font-normal cursor-pointer"
-                            >
-                              {employee.name}
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" className="w-full justify-between mt-2">
+                            {formData.assigned_employee_ids.length > 0
+                              ? `${formData.assigned_employee_ids.length} employee(s) selected`
+                              : "Select employees..."}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full p-0" align="start">
+                          <Command>
+                            <CommandInput placeholder="Search employees..." />
+                            <CommandEmpty>No employees found.</CommandEmpty>
+                            <CommandGroup className="max-h-64 overflow-auto">
+                              {employees?.map((employee) => (
+                                <CommandItem
+                                  key={employee.id}
+                                  onSelect={() => {
+                                    const isSelected = formData.assigned_employee_ids.includes(employee.id);
+                                    if (isSelected) {
+                                      setFormData({
+                                        ...formData,
+                                        assigned_employee_ids: formData.assigned_employee_ids.filter(
+                                          (id) => id !== employee.id
+                                        ),
+                                      });
+                                    } else {
+                                      setFormData({
+                                        ...formData,
+                                        assigned_employee_ids: [...formData.assigned_employee_ids, employee.id],
+                                      });
+                                    }
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      formData.assigned_employee_ids.includes(employee.id)
+                                        ? "opacity-100"
+                                        : "opacity-0"
+                                    )}
+                                  />
+                                  {employee.name || "Unnamed Employee"}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                      
+                      {formData.assigned_employee_ids.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-3">
+                          {formData.assigned_employee_ids.map((employeeId) => {
+                            const employee = employees?.find((e) => e.id === employeeId);
+                            return (
+                              <Badge key={employeeId} variant="secondary" className="gap-1">
+                                {employee?.name || "Unknown"}
+                                <X
+                                  className="h-3 w-3 cursor-pointer hover:text-destructive"
+                                  onClick={() => {
+                                    setFormData({
+                                      ...formData,
+                                      assigned_employee_ids: formData.assigned_employee_ids.filter(
+                                        (id) => id !== employeeId
+                                      ),
+                                    });
+                                  }}
+                                />
+                              </Badge>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                     <DialogFooter>
                       <Button type="submit" className="w-full">
@@ -759,37 +803,79 @@ const Clients = () => {
             </div>
             <div>
               <Label>Assign Employees</Label>
-              <div className="space-y-2 mt-2 max-h-48 overflow-y-auto border rounded-md p-3">
-                {employees?.map((employee) => (
-                  <div key={employee.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`edit-employee-${employee.id}`}
-                      checked={editFormData.assigned_employee_ids.includes(employee.id)}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setEditFormData({
-                            ...editFormData,
-                            assigned_employee_ids: [...editFormData.assigned_employee_ids, employee.id],
-                          });
-                        } else {
-                          setEditFormData({
-                            ...editFormData,
-                            assigned_employee_ids: editFormData.assigned_employee_ids.filter(
-                              (id) => id !== employee.id
-                            ),
-                          });
-                        }
-                      }}
-                    />
-                    <Label
-                      htmlFor={`edit-employee-${employee.id}`}
-                      className="text-sm font-normal cursor-pointer"
-                    >
-                      {employee.name}
-                    </Label>
-                  </div>
-                ))}
-              </div>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full justify-between mt-2">
+                    {editFormData.assigned_employee_ids.length > 0
+                      ? `${editFormData.assigned_employee_ids.length} employee(s) selected`
+                      : "Select employees..."}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Search employees..." />
+                    <CommandEmpty>No employees found.</CommandEmpty>
+                    <CommandGroup className="max-h-64 overflow-auto">
+                      {employees?.map((employee) => (
+                        <CommandItem
+                          key={employee.id}
+                          onSelect={() => {
+                            const isSelected = editFormData.assigned_employee_ids.includes(employee.id);
+                            if (isSelected) {
+                              setEditFormData({
+                                ...editFormData,
+                                assigned_employee_ids: editFormData.assigned_employee_ids.filter(
+                                  (id) => id !== employee.id
+                                ),
+                              });
+                            } else {
+                              setEditFormData({
+                                ...editFormData,
+                                assigned_employee_ids: [...editFormData.assigned_employee_ids, employee.id],
+                              });
+                            }
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              editFormData.assigned_employee_ids.includes(employee.id)
+                                ? "opacity-100"
+                                : "opacity-0"
+                            )}
+                          />
+                          {employee.name || "Unnamed Employee"}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+              
+              {editFormData.assigned_employee_ids.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {editFormData.assigned_employee_ids.map((employeeId) => {
+                    const employee = employees?.find((e) => e.id === employeeId);
+                    return (
+                      <Badge key={employeeId} variant="secondary" className="gap-1">
+                        {employee?.name || "Unknown"}
+                        <X
+                          className="h-3 w-3 cursor-pointer hover:text-destructive"
+                          onClick={() => {
+                            setEditFormData({
+                              ...editFormData,
+                              assigned_employee_ids: editFormData.assigned_employee_ids.filter(
+                                (id) => id !== employeeId
+                              ),
+                            });
+                          }}
+                        />
+                      </Badge>
+                    );
+                  })}
+                </div>
+              )}
             </div>
             <DialogFooter>
               <Button type="submit" className="w-full">
