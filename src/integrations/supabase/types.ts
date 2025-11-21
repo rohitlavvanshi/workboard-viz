@@ -73,7 +73,7 @@ export type Database = {
           id: string
           name: string
           service_start_date: string | null
-          services_provided: string | null
+          services_provided: string[] | null
           updated_at: string
         }
         Insert: {
@@ -84,7 +84,7 @@ export type Database = {
           id?: string
           name: string
           service_start_date?: string | null
-          services_provided?: string | null
+          services_provided?: string[] | null
           updated_at?: string
         }
         Update: {
@@ -95,7 +95,7 @@ export type Database = {
           id?: string
           name?: string
           service_start_date?: string | null
-          services_provided?: string | null
+          services_provided?: string[] | null
           updated_at?: string
         }
         Relationships: [
