@@ -60,6 +60,8 @@ interface Task {
   created_at: string;
   user_id: number;
   user_name?: string;
+  client_id?: string | null;
+  client_name?: string | null;
   frequency?: string | null;
   scheduled_day?: number | null;
 }
@@ -73,12 +75,14 @@ interface User {
 const Index = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [clients, setClients] = useState<Array<{id: string, name: string}>>([]);
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [nameFilter, setNameFilter] = useState<string>("");
   const [frequencyFilter, setFrequencyFilter] = useState<string>("all");
   const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
+  const [clientFilter, setClientFilter] = useState<string>("all");
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [chatHistoryOpen, setChatHistoryOpen] = useState(false);
   const [addTaskOpen, setAddTaskOpen] = useState(false);
@@ -89,6 +93,7 @@ const Index = () => {
     title: "",
     description: "",
     user_id: "",
+    client_association: "none",
     frequency: "one_time",
     scheduled_day: "",
   });
@@ -97,48 +102,73 @@ const Index = () => {
     title: "",
     description: "",
     user_id: "",
+    client_id: null as string | null,
     frequency: "one_time",
     scheduled_day: "",
   });
 
   useEffect(() => {
     fetchTasks();
+    fetchUsers();
+    fetchClients();
   }, []);
 
-  useEffect(() => {
-    filterTasks();
-  }, [tasks, statusFilter, nameFilter, frequencyFilter, dateFilter]);
-
-  const fetchTasks = async () => {
+  const fetchUsers = async () => {
     try {
-      setLoading(true);
-
-      // Fetch tasks
-      const { data: tasksData, error: tasksError } = await supabase
-        .from("tasks")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (tasksError) throw tasksError;
-
-      // Fetch only employees (not managers) with phone numbers
       const { data: usersData, error: usersError } = await supabase
         .from("users")
         .select("id, name, phone, role")
         .eq("role", "employee");
 
       if (usersError) throw usersError;
-
       setUsers(usersData || []);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  };
 
-      // Map user names to tasks
-      const usersMap = new Map(usersData?.map((u) => [u.id, u.name]) || []);
-      const tasksWithUsers = tasksData?.map((task) => ({
+  const fetchClients = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("clients")
+        .select("id, name")
+        .order("name");
+
+      if (error) throw error;
+      setClients(data || []);
+    } catch (error) {
+      console.error("Error fetching clients:", error);
+    }
+  };
+
+  useEffect(() => {
+    filterTasks();
+  }, [tasks, statusFilter, nameFilter, frequencyFilter, dateFilter, clientFilter]);
+
+  const fetchTasks = async () => {
+    try {
+      setLoading(true);
+
+      // Fetch tasks with client information
+      const { data: tasksData, error: tasksError } = await supabase
+        .from("tasks")
+        .select(`
+          *,
+          clients(name)
+        `)
+        .order("created_at", { ascending: false });
+
+      if (tasksError) throw tasksError;
+
+      // Map user and client names to tasks
+      const usersMap = new Map(users.map((u) => [u.id, u.name]));
+      const tasksWithDetails = tasksData?.map((task: any) => ({
         ...task,
         user_name: usersMap.get(task.user_id) || "Unknown User",
+        client_name: task.clients?.name || null,
       })) || [];
 
-      setTasks(tasksWithUsers);
+      setTasks(tasksWithDetails);
     } catch (error) {
       console.error("Error fetching tasks:", error);
       toast({
@@ -178,6 +208,12 @@ const Index = () => {
           taskDate.getFullYear() === dateFilter.getFullYear()
         );
       });
+    }
+
+    if (clientFilter === "none") {
+      filtered = filtered.filter((task) => !task.client_id);
+    } else if (clientFilter !== "all") {
+      filtered = filtered.filter((task) => task.client_id === clientFilter);
     }
 
     setFilteredTasks(filtered);
@@ -303,57 +339,63 @@ const Index = () => {
         }
       }
 
-      // If no user selected or "all", assign to all employees
+      // Determine target users
       const targetUsers = !newTask.user_id || newTask.user_id === "all" 
         ? users 
         : users.filter(u => u.id === parseInt(newTask.user_id));
 
-      const tasksToCreate = targetUsers.map(user => ({
-        title: newTask.title,
-        description: newTask.description,
-        user_id: user.id,
-        frequency: newTask.frequency as any,
-        status: "pending",
-        scheduled_day: newTask.frequency === "daily" || newTask.frequency === "one_time" ? null : (newTask.scheduled_day ? parseInt(newTask.scheduled_day) : null),
-        is_template: isRecurring,
-        next_scheduled_at: nextScheduledAt?.toISOString(),
-      }));
+      // Determine target clients
+      const targetClients = newTask.client_association === "all"
+        ? clients
+        : newTask.client_association === "none"
+        ? [null]
+        : clients.filter(c => c.id === newTask.client_association);
 
-      const { data, error } = await supabase.from("tasks").insert(tasksToCreate).select();
+      // Create task matrix: one task per (employee × client) combination
+      let tasksCreated = 0;
+      for (const user of targetUsers) {
+        for (const client of targetClients) {
+          const taskData = {
+            title: newTask.title,
+            description: newTask.description,
+            user_id: user.id,
+            client_id: client?.id || null,
+            frequency: newTask.frequency as any,
+            status: "pending",
+            scheduled_day: newTask.frequency === "daily" || newTask.frequency === "one_time" ? null : (newTask.scheduled_day ? parseInt(newTask.scheduled_day) : null),
+            is_template: isRecurring,
+            next_scheduled_at: nextScheduledAt?.toISOString(),
+          };
 
-      if (error) throw error;
+          const { error } = await supabase.from("tasks").insert(taskData);
+          
+          if (error) throw error;
+          tasksCreated++;
 
-      // Send webhook for each created task with the employee's phone number
-      for (const task of data || []) {
-        const assignedUser = users.find(u => u.id === task.user_id);
-        
-        try {
-          await fetch("https://alpharc.app.n8n.cloud/webhook/ad751273-410c-46d2-a41e-b3ae9f53e8ff", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              id: task.id,
-              title: task.title,
-              description: task.description,
-              user_id: task.user_id,
-              user_name: assignedUser?.name || "Unknown User",
-              phone: assignedUser?.phone || null,
-              frequency: task.frequency,
-              scheduled_day: task.scheduled_day,
-              status: task.status,
-              created_at: task.created_at,
-            }),
-          });
-        } catch (webhookError) {
-          console.error("Error sending to webhook:", webhookError);
+          // Send webhook
+          try {
+            await fetch("https://alpharc.app.n8n.cloud/webhook/ad751273-410c-46d2-a41e-b3ae9f53e8ff", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                title: newTask.title,
+                description: newTask.description,
+                user_name: user.name,
+                phone: user.phone,
+                client_name: client?.name || null,
+                frequency: newTask.frequency,
+                scheduled_day: newTask.scheduled_day,
+              }),
+            });
+          } catch (webhookError) {
+            console.error("Error sending to webhook:", webhookError);
+          }
         }
       }
 
       toast({
         title: "Success",
-        description: "Task created successfully",
+        description: `Created ${tasksCreated} task(s) successfully`,
       });
 
       setAddTaskOpen(false);
@@ -361,6 +403,7 @@ const Index = () => {
         title: "",
         description: "",
         user_id: "",
+        client_association: "none",
         frequency: "one_time",
         scheduled_day: "",
       });
@@ -388,6 +431,7 @@ const Index = () => {
       title: task.title || "",
       description: task.description || "",
       user_id: task.user_id.toString(),
+      client_id: task.client_id || null,
       frequency: task.frequency || "one_time",
       scheduled_day: task.scheduled_day?.toString() || "",
     });
@@ -464,6 +508,7 @@ const Index = () => {
           title: editTask.title,
           description: editTask.description,
           user_id: parseInt(editTask.user_id),
+          client_id: editTask.client_id,
           frequency: editTask.frequency as any,
           scheduled_day: editTask.frequency === "daily" || editTask.frequency === "one_time" ? null : (editTask.scheduled_day ? parseInt(editTask.scheduled_day) : null),
           is_template: isRecurring,
@@ -572,6 +617,7 @@ const Index = () => {
                 setNameFilter("");
                 setFrequencyFilter("all");
                 setDateFilter(undefined);
+                setClientFilter("all");
               }}
               className="h-8"
             >
@@ -580,7 +626,7 @@ const Index = () => {
             </Button>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             {/* Name/Title Search */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -618,6 +664,22 @@ const Index = () => {
                 <SelectItem value="quarterly">Quarterly</SelectItem>
                 <SelectItem value="semi_annually">Semi-Annually</SelectItem>
                 <SelectItem value="annually">Annually</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Client Filter */}
+            <Select value={clientFilter} onValueChange={setClientFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by client" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Clients</SelectItem>
+                <SelectItem value="none">No Client</SelectItem>
+                {clients.map((client) => (
+                  <SelectItem key={client.id} value={client.id}>
+                    {client.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
@@ -661,6 +723,7 @@ const Index = () => {
                   <TableHead>Title</TableHead>
                   <TableHead>Description</TableHead>
                   <TableHead>Assigned To</TableHead>
+                  <TableHead>Client</TableHead>
                   <TableHead>Frequency</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Created</TableHead>
@@ -670,7 +733,7 @@ const Index = () => {
               <TableBody>
                 {filteredTasks.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                       No tasks found
                     </TableCell>
                   </TableRow>
@@ -688,6 +751,13 @@ const Index = () => {
                           <User className="h-4 w-4 text-muted-foreground" />
                           {task.user_name}
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        {task.client_name ? (
+                          <Badge variant="outline">{task.client_name}</Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">No Client</span>
+                        )}
                       </TableCell>
                       <TableCell>{getFrequencyLabel(task.frequency)}</TableCell>
                       <TableCell>
@@ -815,6 +885,28 @@ const Index = () => {
               </Select>
             </div>
             <div>
+              <Label htmlFor="client">Client Association</Label>
+              <Select
+                value={newTask.client_association}
+                onValueChange={(value) =>
+                  setNewTask({ ...newTask, client_association: value })
+                }
+              >
+                <SelectTrigger id="client">
+                  <SelectValue placeholder="Select client" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No Client</SelectItem>
+                  <SelectItem value="all">All Clients</SelectItem>
+                  {clients.map((client) => (
+                    <SelectItem key={client.id} value={client.id}>
+                      {client.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
               <Label htmlFor="frequency">Frequency</Label>
               <Select
                 value={newTask.frequency}
@@ -916,6 +1008,27 @@ const Index = () => {
                   {users.map((user) => (
                     <SelectItem key={user.id} value={user.id.toString()}>
                       {user.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="edit-client">Client</Label>
+              <Select
+                value={editTask.client_id || "none"}
+                onValueChange={(value) =>
+                  setEditTask({ ...editTask, client_id: value === "none" ? null : value })
+                }
+              >
+                <SelectTrigger id="edit-client">
+                  <SelectValue placeholder="Select client" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No Client</SelectItem>
+                  {clients.map((client) => (
+                    <SelectItem key={client.id} value={client.id}>
+                      {client.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
