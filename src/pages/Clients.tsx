@@ -387,13 +387,21 @@ const Clients = () => {
                     </div>
                     <div>
                       <Label htmlFor="client_type">Client Type</Label>
-                      <Input
-                        id="client_type"
+                      <Select
                         value={formData.client_type}
-                        onChange={(e) =>
-                          setFormData({ ...formData, client_type: e.target.value })
+                        onValueChange={(value) =>
+                          setFormData({ ...formData, client_type: value })
                         }
-                      />
+                      >
+                        <SelectTrigger id="client_type">
+                          <SelectValue placeholder="Select client type..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Company">Company</SelectItem>
+                          <SelectItem value="Licensed dealer">Licensed dealer</SelectItem>
+                          <SelectItem value="Non-profit organization">Non-profit organization</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div>
                       <Label>Services Provided</Label>
@@ -735,13 +743,21 @@ const Clients = () => {
             </div>
             <div>
               <Label htmlFor="edit_client_type">Client Type</Label>
-              <Input
-                id="edit_client_type"
+              <Select
                 value={editFormData.client_type}
-                onChange={(e) =>
-                  setEditFormData({ ...editFormData, client_type: e.target.value })
+                onValueChange={(value) =>
+                  setEditFormData({ ...editFormData, client_type: value })
                 }
-              />
+              >
+                <SelectTrigger id="edit_client_type">
+                  <SelectValue placeholder="Select client type..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Company">Company</SelectItem>
+                  <SelectItem value="Licensed dealer">Licensed dealer</SelectItem>
+                  <SelectItem value="Non-profit organization">Non-profit organization</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label>Services Provided</Label>
