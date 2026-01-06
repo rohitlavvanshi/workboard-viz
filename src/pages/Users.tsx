@@ -50,10 +50,10 @@ interface Task {
 }
 
 const formSchema = z.object({
-  name: z.string().trim().min(1, { message: "Name is required" }).max(100, { message: "Name must be less than 100 characters" }),
-  countryCode: z.string().trim().min(1, { message: "Country code is required" }),
-  phoneNumber: z.string().trim().min(1, { message: "Phone number is required" }).regex(/^\d+$/, { message: "Phone number must contain only numbers" }),
-  category: z.string().trim().min(1, { message: "Category is required" }).max(50, { message: "Category must be less than 50 characters" }),
+  name: z.string().trim().min(1, { message: "שם הוא שדה חובה" }).max(100, { message: "השם חייב להיות פחות מ-100 תווים" }),
+  countryCode: z.string().trim().min(1, { message: "קוד מדינה הוא שדה חובה" }),
+  phoneNumber: z.string().trim().min(1, { message: "מספר טלפון הוא שדה חובה" }).regex(/^\d+$/, { message: "מספר טלפון חייב להכיל רק מספרים" }),
+  category: z.string().trim().min(1, { message: "קטגוריה היא שדה חובה" }).max(50, { message: "הקטגוריה חייבת להיות פחות מ-50 תווים" }),
 });
 
 const Users = () => {
@@ -182,8 +182,8 @@ const Users = () => {
       if (error) throw error;
 
       toast({
-        title: "Success",
-        description: "Employee added successfully",
+        title: "הצלחה",
+        description: "העובד נוסף בהצלחה",
       });
 
       form.reset();
@@ -191,8 +191,8 @@ const Users = () => {
     } catch (error) {
       console.error("Error adding employee:", error);
       toast({
-        title: "Error",
-        description: "Failed to add employee. Please try again.",
+        title: "שגיאה",
+        description: "נכשל בהוספת עובד. נא לנסות שוב.",
         variant: "destructive",
       });
     } finally {
@@ -243,8 +243,8 @@ const Users = () => {
       if (error) throw error;
 
       toast({
-        title: "Success",
-        description: "Employee updated successfully",
+        title: "הצלחה",
+        description: "העובד עודכן בהצלחה",
       });
 
       setEditDialogOpen(false);
@@ -253,8 +253,8 @@ const Users = () => {
     } catch (error: any) {
       console.error("Error updating employee:", error);
       toast({
-        title: "Error",
-        description: error.message || "Failed to update employee",
+        title: "שגיאה",
+        description: error.message || "נכשל בעדכון עובד",
         variant: "destructive",
       });
     } finally {
@@ -279,8 +279,8 @@ const Users = () => {
       if (error) throw error;
 
       toast({
-        title: "Success",
-        description: "Employee deleted successfully",
+        title: "הצלחה",
+        description: "העובד נמחק בהצלחה",
       });
 
       setDeleteDialogOpen(false);
@@ -288,8 +288,8 @@ const Users = () => {
     } catch (error) {
       console.error("Error deleting employee:", error);
       toast({
-        title: "Error",
-        description: "Failed to delete employee. Please try again.",
+        title: "שגיאה",
+        description: "נכשל במחיקת עובד. נא לנסות שוב.",
         variant: "destructive",
       });
     }
@@ -309,8 +309,8 @@ const Users = () => {
     } catch (error) {
       console.error("Error fetching user tasks:", error);
       toast({
-        title: "Error",
-        description: "Failed to fetch tasks",
+        title: "שגיאה",
+        description: "נכשל בטעינת משימות",
         variant: "destructive",
       });
     }
@@ -328,25 +328,25 @@ const Users = () => {
   const getFrequencyLabel = (frequency: string | null) => {
     switch (frequency) {
       case "one_time":
-        return "One Time";
+        return "חד פעמי";
       case "daily":
-        return "Daily";
+        return "יומי";
       case "monthly":
-        return "Monthly";
+        return "חודשי";
       case "quarterly":
-        return "Quarterly";
+        return "רבעוני";
       case "semi_annually":
-        return "Semi-Annually";
+        return "חצי שנתי";
       case "annually":
-        return "Annually";
+        return "שנתי";
       default:
-        return "One Time";
+        return "חד פעמי";
     }
   };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
+    return date.toLocaleDateString("he-IL", {
       month: "short",
       day: "numeric",
       year: "numeric",
@@ -387,10 +387,10 @@ const Users = () => {
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <UsersIcon className="h-6 w-6 text-primary" />
-                  <CardTitle>Employees</CardTitle>
+                  <CardTitle>עובדים</CardTitle>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Manage and view all employees in your organization
+                  ניהול וצפייה בכל העובדים בארגון שלך
                 </p>
               </div>
               <div className="flex items-center gap-4">
@@ -398,10 +398,10 @@ const Users = () => {
                   <Filter className="h-4 w-4 text-muted-foreground" />
                   <Select value={categoryFilter} onValueChange={handleCategoryFilter}>
                     <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Filter by category" />
+                      <SelectValue placeholder="סנן לפי קטגוריה" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Categories</SelectItem>
+                      <SelectItem value="all">כל הקטגוריות</SelectItem>
                       {categories.map((category) => (
                         <SelectItem key={category} value={category}>
                           {category}
@@ -414,14 +414,14 @@ const Users = () => {
                 <DialogTrigger asChild>
                   <Button>
                     <Plus className="h-4 w-4 mr-2" />
-                    Add Employee
+                    הוסף עובד
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[425px]">
                   <DialogHeader>
-                    <DialogTitle>Add New Employee</DialogTitle>
+                    <DialogTitle>הוסף עובד חדש</DialogTitle>
                     <DialogDescription>
-                      Create a new employee record. All fields are required.
+                      צור רשומת עובד חדשה. כל השדות נדרשים.
                     </DialogDescription>
                   </DialogHeader>
                   <Form {...form}>
@@ -431,9 +431,9 @@ const Users = () => {
                         name="name"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Name *</FormLabel>
+                            <FormLabel>שם *</FormLabel>
                             <FormControl>
-                              <Input placeholder="Enter employee name" {...field} />
+                              <Input placeholder="הזן שם עובד" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -445,7 +445,7 @@ const Users = () => {
                           name="countryCode"
                           render={({ field }) => (
                             <FormItem className="col-span-1">
-                              <FormLabel>Code *</FormLabel>
+                              <FormLabel>קוד *</FormLabel>
                               <FormControl>
                                 <Input placeholder="+1" {...field} />
                               </FormControl>
@@ -458,7 +458,7 @@ const Users = () => {
                           name="phoneNumber"
                           render={({ field }) => (
                             <FormItem className="col-span-2">
-                              <FormLabel>Phone Number *</FormLabel>
+                              <FormLabel>מספר טלפון *</FormLabel>
                               <FormControl>
                                 <Input 
                                   placeholder="1234567890" 
@@ -479,9 +479,9 @@ const Users = () => {
                          name="category"
                          render={({ field }) => (
                            <FormItem>
-                             <FormLabel>Category *</FormLabel>
+                             <FormLabel>קטגוריה *</FormLabel>
                              <FormControl>
-                               <Input placeholder="Enter category (e.g., Sales, IT, HR)" {...field} />
+                               <Input placeholder="הזן קטגוריה (לדוגמה: מכירות, IT, משאבי אנוש)" {...field} />
                              </FormControl>
                              <FormMessage />
                            </FormItem>
@@ -489,7 +489,7 @@ const Users = () => {
                        />
                        <DialogFooter>
                          <Button type="submit" disabled={submitting}>
-                           {submitting ? "Adding..." : "Add Employee"}
+                           {submitting ? "מוסיף..." : "הוסף עובד"}
                          </Button>
                        </DialogFooter>
                      </form>
@@ -504,7 +504,7 @@ const Users = () => {
               <div className="text-center py-12">
                 <UsersIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">
-                  {categoryFilter === "all" ? "No employees found" : `No employees found in "${categoryFilter}" category`}
+                  {categoryFilter === "all" ? "לא נמצאו עובדים" : `לא נמצאו עובדים בקטגוריית "${categoryFilter}"`}
                 </p>
               </div>
             ) : (
@@ -512,13 +512,13 @@ const Users = () => {
                 <Table>
                    <TableHeader>
                      <TableRow>
-                       <TableHead>Name</TableHead>
-                       <TableHead>Phone</TableHead>
-                       <TableHead>Category</TableHead>
-                       <TableHead>Role</TableHead>
-                       <TableHead className="text-right">Total Tasks</TableHead>
-                       <TableHead className="text-right">Chat History</TableHead>
-                       <TableHead className="text-right">Actions</TableHead>
+                       <TableHead>שם</TableHead>
+                       <TableHead>טלפון</TableHead>
+                       <TableHead>קטגוריה</TableHead>
+                       <TableHead>תפקיד</TableHead>
+                       <TableHead className="text-right">סה"כ משימות</TableHead>
+                       <TableHead className="text-right">היסטוריית צ'אט</TableHead>
+                       <TableHead className="text-right">פעולות</TableHead>
                      </TableRow>
                    </TableHeader>
                    <TableBody>
@@ -531,13 +531,13 @@ const Users = () => {
                                 {user.name?.charAt(0).toUpperCase() || "?"}
                               </span>
                             </div>
-                            {user.name || "N/A"}
+                            {user.name || "לא זמין"}
                           </div>
                         </TableCell>
                          <TableCell>
                            <div className="flex items-center gap-2 text-muted-foreground">
                              <Mail className="h-4 w-4" />
-                             {user.phone || "N/A"}
+                             {user.phone || "לא זמין"}
                            </div>
                          </TableCell>
                          <TableCell>
@@ -545,19 +545,19 @@ const Users = () => {
                              <Badge variant="outline" className="capitalize">
                                {user.category}
                              </Badge>
+                            ) : (
+                              <span className="text-muted-foreground">לא זמין</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {user.role ? (
+                             <Badge variant="secondary" className="capitalize">
+                               <Briefcase className="h-3 w-3 mr-1" />
+                               {user.role}
+                             </Badge>
                            ) : (
-                             <span className="text-muted-foreground">N/A</span>
+                             <span className="text-muted-foreground">לא זמין</span>
                            )}
-                         </TableCell>
-                         <TableCell>
-                           {user.role ? (
-                            <Badge variant="secondary" className="capitalize">
-                              <Briefcase className="h-3 w-3 mr-1" />
-                              {user.role}
-                            </Badge>
-                          ) : (
-                            <span className="text-muted-foreground">N/A</span>
-                          )}
                         </TableCell>
                         <TableCell className="text-right">
                           <Badge variant="outline">
@@ -574,7 +574,7 @@ const Users = () => {
                             }}
                           >
                             <MessageSquare className="h-4 w-4 mr-2" />
-                            View Chat
+                            צפה בצ'אט
                           </Button>
                         </TableCell>
                         <TableCell className="text-right">
@@ -589,7 +589,7 @@ const Users = () => {
                               }}
                             >
                               <ListTodo className="h-4 w-4 mr-2" />
-                              View Tasks
+                              צפה במשימות
                             </Button>
                             <Button
                               variant="ghost"
@@ -622,18 +622,18 @@ const Users = () => {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Employee</AlertDialogTitle>
+            <AlertDialogTitle>מחיקת עובד</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete {userToDelete?.name}? This action cannot be undone.
+              האם אתה בטוח שברצונך למחוק את {userToDelete?.name}? פעולה זו לא ניתנת לביטול.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>ביטול</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete
+              מחק
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -643,22 +643,22 @@ const Users = () => {
       <Dialog open={chatHistoryOpen} onOpenChange={setChatHistoryOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle>{selectedUser?.name || "Employee"} - Chat History</DialogTitle>
+            <DialogTitle>{selectedUser?.name || "עובד"} - היסטוריית צ'אט</DialogTitle>
           </DialogHeader>
           {selectedUser && (
             <div className="space-y-4 overflow-y-auto pr-2">
               <div>
-                <h4 className="font-semibold mb-2">Employee Details</h4>
+                <h4 className="font-semibold mb-2">פרטי עובד</h4>
                 <div className="space-y-1 text-sm text-muted-foreground">
-                  <p><span className="font-medium">Name:</span> {selectedUser.name || "N/A"}</p>
-                  <p><span className="font-medium">Phone:</span> {selectedUser.phone || "N/A"}</p>
-                  <p><span className="font-medium">Role:</span> {selectedUser.role || "N/A"}</p>
+                  <p><span className="font-medium">שם:</span> {selectedUser.name || "לא זמין"}</p>
+                  <p><span className="font-medium">טלפון:</span> {selectedUser.phone || "לא זמין"}</p>
+                  <p><span className="font-medium">תפקיד:</span> {selectedUser.role || "לא זמין"}</p>
                 </div>
               </div>
               <div>
-                <h4 className="font-semibold mb-2">Chat History</h4>
+                <h4 className="font-semibold mb-2">היסטוריית צ'אט</h4>
                 <div className="rounded-md border bg-muted/50 p-4 text-sm max-h-64 overflow-y-auto whitespace-pre-wrap">
-                  {selectedUser.chat_history || "No chat history available"}
+                  {selectedUser.chat_history || "אין היסטוריית צ'אט זמינה"}
                 </div>
               </div>
             </div>
@@ -670,9 +670,9 @@ const Users = () => {
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Edit Employee</DialogTitle>
+            <DialogTitle>ערוך עובד</DialogTitle>
             <DialogDescription>
-              Update employee information. All fields are required.
+              עדכן פרטי עובד. כל השדות נדרשים.
             </DialogDescription>
           </DialogHeader>
           <Form {...editForm}>
@@ -682,9 +682,9 @@ const Users = () => {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Name *</FormLabel>
+                    <FormLabel>שם *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter employee name" {...field} />
+                      <Input placeholder="הזן שם עובד" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -696,7 +696,7 @@ const Users = () => {
                   name="countryCode"
                   render={({ field }) => (
                     <FormItem className="col-span-1">
-                      <FormLabel>Code *</FormLabel>
+                      <FormLabel>קוד *</FormLabel>
                       <FormControl>
                         <Input placeholder="+1" {...field} />
                       </FormControl>
@@ -709,7 +709,7 @@ const Users = () => {
                   name="phoneNumber"
                   render={({ field }) => (
                     <FormItem className="col-span-2">
-                      <FormLabel>Phone Number *</FormLabel>
+                      <FormLabel>מספר טלפון *</FormLabel>
                       <FormControl>
                         <Input 
                           placeholder="1234567890" 
@@ -730,9 +730,9 @@ const Users = () => {
                          name="category"
                          render={({ field }) => (
                            <FormItem>
-                             <FormLabel>Category *</FormLabel>
+                             <FormLabel>קטגוריה *</FormLabel>
                              <FormControl>
-                               <Input placeholder="Enter category (e.g., Sales, IT, HR)" {...field} />
+                               <Input placeholder="הזן קטגוריה (לדוגמה: מכירות, IT, משאבי אנוש)" {...field} />
                              </FormControl>
                              <FormMessage />
                            </FormItem>
@@ -740,7 +740,7 @@ const Users = () => {
                        />
                        <DialogFooter>
                          <Button type="submit" disabled={submitting}>
-                           {submitting ? "Updating..." : "Update Employee"}
+                           {submitting ? "מעדכן..." : "עדכן עובד"}
                          </Button>
                        </DialogFooter>
                      </form>
@@ -752,37 +752,37 @@ const Users = () => {
       <Dialog open={tasksDialogOpen} onOpenChange={setTasksDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle>{selectedUser?.name || "Employee"} - Tasks</DialogTitle>
+            <DialogTitle>{selectedUser?.name || "עובד"} - משימות</DialogTitle>
             <DialogDescription>
-              All tasks assigned to this employee
+              כל המשימות שהוקצו לעובד זה
             </DialogDescription>
           </DialogHeader>
           <div className="overflow-y-auto pr-2">
             {userTasks.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <ListTodo className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No tasks assigned to this employee</p>
+                <p>לא הוקצו משימות לעובד זה</p>
               </div>
             ) : (
               <div className="rounded-md border">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Title</TableHead>
-                      <TableHead>Description</TableHead>
-                      <TableHead>Frequency</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Created</TableHead>
+                      <TableHead>כותרת</TableHead>
+                      <TableHead>תיאור</TableHead>
+                      <TableHead>תדירות</TableHead>
+                      <TableHead>סטטוס</TableHead>
+                      <TableHead>נוצר</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {userTasks.map((task) => (
                       <TableRow key={task.id}>
                         <TableCell className="font-medium">
-                          {task.title || "Untitled"}
+                          {task.title || "ללא כותרת"}
                         </TableCell>
                         <TableCell className="max-w-xs truncate">
-                          {task.description || "No description"}
+                          {task.description || "ללא תיאור"}
                         </TableCell>
                         <TableCell>
                           <Badge variant="secondary">
@@ -791,7 +791,7 @@ const Users = () => {
                         </TableCell>
                         <TableCell>
                           <Badge variant={task.status === "completed" ? "default" : "outline"}>
-                            {task.status?.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') || "Pending"}
+                            {task.status === "completed" ? "הושלם" : task.status === "in_progress" ? "בביצוע" : "ממתין"}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
