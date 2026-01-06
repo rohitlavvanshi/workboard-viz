@@ -155,8 +155,8 @@ const Clients = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["clients"] });
       toast({
-        title: "Success",
-        description: "Client created successfully",
+        title: "הצלחה",
+        description: "הלקוח נוצר בהצלחה",
       });
       setIsOpen(false);
       setFormData({
@@ -170,8 +170,8 @@ const Clients = () => {
     onError: (error) => {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: `Failed to create client: ${error.message}`,
+        title: "שגיאה",
+        description: `נכשל ביצירת לקוח: ${error.message}`,
       });
     },
   });
@@ -194,8 +194,8 @@ const Clients = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["clients"] });
       toast({
-        title: "Success",
-        description: "Client updated successfully",
+        title: "הצלחה",
+        description: "הלקוח עודכן בהצלחה",
       });
       setEditDialogOpen(false);
       setClientToEdit(null);
@@ -203,8 +203,8 @@ const Clients = () => {
     onError: (error) => {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: `Failed to update client: ${error.message}`,
+        title: "שגיאה",
+        description: `נכשל בעדכון לקוח: ${error.message}`,
       });
     },
   });
@@ -217,8 +217,8 @@ const Clients = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["clients"] });
       toast({
-        title: "Success",
-        description: "Client deleted successfully",
+        title: "הצלחה",
+        description: "הלקוח נמחק בהצלחה",
       });
       setDeleteDialogOpen(false);
       setClientToDelete(null);
@@ -226,8 +226,8 @@ const Clients = () => {
     onError: (error) => {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: `Failed to delete client: ${error.message}`,
+        title: "שגיאה",
+        description: `נכשל במחיקת לקוח: ${error.message}`,
       });
     },
   });
@@ -353,29 +353,29 @@ const Clients = () => {
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <Briefcase className="h-6 w-6 text-primary" />
-                  <CardTitle>Clients</CardTitle>
+                  <CardTitle>לקוחות</CardTitle>
                 </div>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Manage and view all clients in your organization
+                  ניהול וצפייה בכל הלקוחות בארגון שלך
                 </p>
               </div>
               <Dialog open={isOpen} onOpenChange={setIsOpen}>
                 <DialogTrigger asChild>
                   <Button>
                     <Plus className="h-4 w-4 mr-2" />
-                    Add Client
+                    הוסף לקוח
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Add New Client</DialogTitle>
+                <DialogHeader>
+                    <DialogTitle>הוסף לקוח חדש</DialogTitle>
                     <DialogDescription>
-                      Create a new client record. Name is required.
+                      צור רשומת לקוח חדשה. שם הוא שדה חובה.
                     </DialogDescription>
                   </DialogHeader>
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                      <Label htmlFor="name">Name *</Label>
+                      <Label htmlFor="name">שם *</Label>
                       <Input
                         id="name"
                         value={formData.name}
@@ -386,7 +386,7 @@ const Clients = () => {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="client_type">Client Type</Label>
+                      <Label htmlFor="client_type">סוג לקוח</Label>
                       <Select
                         value={formData.client_type}
                         onValueChange={(value) =>
@@ -394,20 +394,20 @@ const Clients = () => {
                         }
                       >
                         <SelectTrigger id="client_type">
-                          <SelectValue placeholder="Select client type..." />
+                          <SelectValue placeholder="בחר סוג לקוח..." />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Company">Company</SelectItem>
-                          <SelectItem value="Licensed dealer">Licensed dealer</SelectItem>
-                          <SelectItem value="Non-profit organization">Non-profit organization</SelectItem>
+                          <SelectItem value="Company">חברה</SelectItem>
+                          <SelectItem value="Licensed dealer">סוחר מורשה</SelectItem>
+                          <SelectItem value="Non-profit organization">ארגון ללא מטרות רווח</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div>
-                      <Label>Services Provided</Label>
+                      <Label>שירותים מסופקים</Label>
                       <div className="flex gap-2 mt-2">
                         <Input
-                          placeholder="Enter service name..."
+                          placeholder="הזן שם שירות..."
                           value={newService}
                           onChange={(e) => setNewService(e.target.value)}
                           onKeyPress={(e) => {
@@ -422,7 +422,7 @@ const Clients = () => {
                           onClick={handleAddService}
                           variant="secondary"
                         >
-                          Add
+                          הוסף
                         </Button>
                       </div>
                       
@@ -448,7 +448,7 @@ const Clients = () => {
                       )}
                     </div>
                     <div>
-                      <Label htmlFor="service_start_date">Service Start Date</Label>
+                      <Label htmlFor="service_start_date">תאריך התחלת שירות</Label>
                       <Input
                         id="service_start_date"
                         type="date"
@@ -462,20 +462,20 @@ const Clients = () => {
                       />
                     </div>
                     <div>
-                      <Label>Assign Employees</Label>
+                      <Label>שייך עובדים</Label>
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button variant="outline" className="w-full justify-between mt-2">
                             {formData.assigned_employee_ids.length > 0
-                              ? `${formData.assigned_employee_ids.length} employee(s) selected`
-                              : "Select employees..."}
+                              ? `${formData.assigned_employee_ids.length} עובדים נבחרו`
+                              : "בחר עובדים..."}
                             <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-full p-0" align="start">
                           <Command>
-                            <CommandInput placeholder="Search employees..." />
-                            <CommandEmpty>No employees found.</CommandEmpty>
+                            <CommandInput placeholder="חפש עובדים..." />
+                            <CommandEmpty>לא נמצאו עובדים.</CommandEmpty>
                             <CommandGroup className="max-h-64 overflow-auto">
                               {employees?.map((employee) => (
                                 <CommandItem
@@ -505,7 +505,7 @@ const Clients = () => {
                                         : "opacity-0"
                                     )}
                                   />
-                                  {employee.name || "Unnamed Employee"}
+                                  {employee.name || "עובד ללא שם"}
                                 </CommandItem>
                               ))}
                             </CommandGroup>
@@ -519,7 +519,7 @@ const Clients = () => {
                             const employee = employees?.find((e) => e.id === employeeId);
                             return (
                               <Badge key={employeeId} variant="secondary" className="gap-1">
-                                {employee?.name || "Unknown"}
+                                {employee?.name || "לא ידוע"}
                                 <X
                                   className="h-3 w-3 cursor-pointer hover:text-destructive"
                                   onClick={() => {
@@ -539,7 +539,7 @@ const Clients = () => {
                     </div>
                     <DialogFooter>
                       <Button type="submit" className="w-full">
-                        Create Client
+                        צור לקוח
                       </Button>
                     </DialogFooter>
                   </form>
@@ -549,17 +549,17 @@ const Clients = () => {
             <div className="flex items-center gap-3">
               <div className="flex-1">
                 <Label htmlFor="filter-type" className="text-xs text-muted-foreground">
-                  Filter by Client Type
+                  סנן לפי סוג לקוח
                 </Label>
                 <Select value={filterClientType} onValueChange={setFilterClientType}>
                   <SelectTrigger id="filter-type">
-                    <SelectValue placeholder="All types" />
+                    <SelectValue placeholder="כל הסוגים" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All types</SelectItem>
+                    <SelectItem value="all">כל הסוגים</SelectItem>
                     {uniqueClientTypes.map((type) => (
                       <SelectItem key={type} value={type!}>
-                        {type}
+                        {type === "Company" ? "חברה" : type === "Licensed dealer" ? "סוחר מורשה" : type === "Non-profit organization" ? "ארגון ללא מטרות רווח" : type}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -567,17 +567,17 @@ const Clients = () => {
               </div>
               <div className="flex-1">
                 <Label htmlFor="filter-services" className="text-xs text-muted-foreground">
-                  Filter by Services
+                  סנן לפי שירותים
                 </Label>
                 <Select
                   value={filterServicesProvided}
                   onValueChange={setFilterServicesProvided}
                 >
                   <SelectTrigger id="filter-services">
-                    <SelectValue placeholder="All services" />
+                    <SelectValue placeholder="כל השירותים" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All services</SelectItem>
+                    <SelectItem value="all">כל השירותים</SelectItem>
                     {uniqueServices.map((service) => (
                       <SelectItem key={service} value={service!}>
                         {service}
@@ -592,19 +592,19 @@ const Clients = () => {
             {!clients || clients.length === 0 ? (
               <div className="text-center py-12">
                 <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">No clients found</p>
+                <p className="text-muted-foreground">לא נמצאו לקוחות</p>
               </div>
             ) : (
               <div className="rounded-md border">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Client Type</TableHead>
-                      <TableHead>Services Provided</TableHead>
-                      <TableHead>Service Start Date</TableHead>
-                      <TableHead>Assigned Employee</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead>שם</TableHead>
+                      <TableHead>סוג לקוח</TableHead>
+                      <TableHead>שירותים מסופקים</TableHead>
+                      <TableHead>תאריך התחלת שירות</TableHead>
+                      <TableHead>עובד מוקצה</TableHead>
+                      <TableHead className="text-right">פעולות</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -623,7 +623,7 @@ const Clients = () => {
                         <TableCell>
                           {client.client_type ? (
                             <Badge variant="outline" className="capitalize">
-                              {client.client_type}
+                              {client.client_type === "Company" ? "חברה" : client.client_type === "Licensed dealer" ? "סוחר מורשה" : client.client_type === "Non-profit organization" ? "ארגון ללא מטרות רווח" : client.client_type}
                             </Badge>
                           ) : (
                             <span className="text-muted-foreground">-</span>
@@ -646,7 +646,7 @@ const Clients = () => {
                           {client.service_start_date ? (
                             <div className="flex items-center gap-2 text-muted-foreground">
                               <Calendar className="h-4 w-4" />
-                              {new Date(client.service_start_date).toLocaleDateString()}
+                              {new Date(client.service_start_date).toLocaleDateString('he-IL')}
                             </div>
                           ) : (
                             <span className="text-muted-foreground">-</span>
@@ -660,7 +660,7 @@ const Clients = () => {
                                 return (
                                   <Badge key={employeeId} variant="secondary" className="text-xs">
                                     <UsersIcon className="h-3 w-3 mr-1" />
-                                    {employee?.name || `Employee ${employeeId}`}
+                                    {employee?.name || `עובד ${employeeId}`}
                                   </Badge>
                                 );
                               })}
@@ -703,18 +703,18 @@ const Clients = () => {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Client</AlertDialogTitle>
+            <AlertDialogTitle>מחיקת לקוח</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete {clientToDelete?.name}? This action cannot be undone.
+              האם אתה בטוח שברצונך למחוק את {clientToDelete?.name}? פעולה זו לא ניתנת לביטול.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>ביטול</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete
+              מחק
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -724,14 +724,14 @@ const Clients = () => {
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Client</DialogTitle>
+            <DialogTitle>ערוך לקוח</DialogTitle>
             <DialogDescription>
-              Update client information. Name is required.
+              עדכן פרטי לקוח. שם הוא שדה חובה.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleEditSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="edit_name">Name *</Label>
+              <Label htmlFor="edit_name">שם *</Label>
               <Input
                 id="edit_name"
                 value={editFormData.name}
@@ -742,7 +742,7 @@ const Clients = () => {
               />
             </div>
             <div>
-              <Label htmlFor="edit_client_type">Client Type</Label>
+              <Label htmlFor="edit_client_type">סוג לקוח</Label>
               <Select
                 value={editFormData.client_type}
                 onValueChange={(value) =>
@@ -750,20 +750,20 @@ const Clients = () => {
                 }
               >
                 <SelectTrigger id="edit_client_type">
-                  <SelectValue placeholder="Select client type..." />
+                  <SelectValue placeholder="בחר סוג לקוח..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Company">Company</SelectItem>
-                  <SelectItem value="Licensed dealer">Licensed dealer</SelectItem>
-                  <SelectItem value="Non-profit organization">Non-profit organization</SelectItem>
+                  <SelectItem value="Company">חברה</SelectItem>
+                  <SelectItem value="Licensed dealer">סוחר מורשה</SelectItem>
+                  <SelectItem value="Non-profit organization">ארגון ללא מטרות רווח</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label>Services Provided</Label>
+              <Label>שירותים מסופקים</Label>
               <div className="flex gap-2 mt-2">
                 <Input
-                  placeholder="Enter service name..."
+                  placeholder="הזן שם שירות..."
                   value={editNewService}
                   onChange={(e) => setEditNewService(e.target.value)}
                   onKeyPress={(e) => {
@@ -778,7 +778,7 @@ const Clients = () => {
                   onClick={handleAddEditService}
                   variant="secondary"
                 >
-                  Add
+                  הוסף
                 </Button>
               </div>
               
@@ -804,7 +804,7 @@ const Clients = () => {
               )}
             </div>
             <div>
-              <Label htmlFor="edit_service_start_date">Service Start Date</Label>
+              <Label htmlFor="edit_service_start_date">תאריך התחלת שירות</Label>
               <Input
                 id="edit_service_start_date"
                 type="date"
@@ -818,20 +818,20 @@ const Clients = () => {
               />
             </div>
             <div>
-              <Label>Assign Employees</Label>
+              <Label>שייך עובדים</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full justify-between mt-2">
                     {editFormData.assigned_employee_ids.length > 0
-                      ? `${editFormData.assigned_employee_ids.length} employee(s) selected`
-                      : "Select employees..."}
+                      ? `${editFormData.assigned_employee_ids.length} עובדים נבחרו`
+                      : "בחר עובדים..."}
                     <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-full p-0" align="start">
                   <Command>
-                    <CommandInput placeholder="Search employees..." />
-                    <CommandEmpty>No employees found.</CommandEmpty>
+                    <CommandInput placeholder="חפש עובדים..." />
+                    <CommandEmpty>לא נמצאו עובדים.</CommandEmpty>
                     <CommandGroup className="max-h-64 overflow-auto">
                       {employees?.map((employee) => (
                         <CommandItem
@@ -861,7 +861,7 @@ const Clients = () => {
                                 : "opacity-0"
                             )}
                           />
-                          {employee.name || "Unnamed Employee"}
+                          {employee.name || "עובד ללא שם"}
                         </CommandItem>
                       ))}
                     </CommandGroup>
@@ -875,7 +875,7 @@ const Clients = () => {
                     const employee = employees?.find((e) => e.id === employeeId);
                     return (
                       <Badge key={employeeId} variant="secondary" className="gap-1">
-                        {employee?.name || "Unknown"}
+                        {employee?.name || "לא ידוע"}
                         <X
                           className="h-3 w-3 cursor-pointer hover:text-destructive"
                           onClick={() => {
@@ -895,7 +895,7 @@ const Clients = () => {
             </div>
             <DialogFooter>
               <Button type="submit" className="w-full">
-                Update Client
+                עדכן לקוח
               </Button>
             </DialogFooter>
           </form>
