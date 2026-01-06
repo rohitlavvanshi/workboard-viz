@@ -70,8 +70,8 @@ const ScheduledTasks = () => {
     } catch (error) {
       console.error("Error fetching scheduled tasks:", error);
       toast({
-        title: "Error",
-        description: "Failed to fetch scheduled tasks",
+        title: "שגיאה",
+        description: "נכשל בטעינת משימות מתוזמנות",
         variant: "destructive",
       });
     } finally {
@@ -119,16 +119,16 @@ const ScheduledTasks = () => {
       if (error) throw error;
 
       toast({
-        title: "Success",
-        description: "Task deleted successfully",
+        title: "הצלחה",
+        description: "המשימה נמחקה בהצלחה",
       });
 
       fetchScheduledTasks();
     } catch (error) {
       console.error("Error deleting task:", error);
       toast({
-        title: "Error",
-        description: "Failed to delete task",
+        title: "שגיאה",
+        description: "נכשל במחיקת משימה",
         variant: "destructive",
       });
     } finally {
@@ -138,27 +138,36 @@ const ScheduledTasks = () => {
 
   const getFrequencyLabel = (frequency: string | null) => {
     const labels: Record<string, string> = {
-      one_time: "One Time",
-      daily: "Daily",
-      monthly: "Monthly",
-      quarterly: "Quarterly",
-      semi_annually: "Semi-Annually",
-      annually: "Annually",
+      one_time: "חד פעמי",
+      daily: "יומי",
+      monthly: "חודשי",
+      quarterly: "רבעוני",
+      semi_annually: "חצי שנתי",
+      annually: "שנתי",
     };
-    return frequency ? labels[frequency] || frequency : "N/A";
+    return frequency ? labels[frequency] || frequency : "לא זמין";
   };
 
   const getUserName = (userId: number) => {
     const user = users.find((u) => u.id === userId);
-    return user?.name || "Unknown User";
+    return user?.name || "משתמש לא ידוע";
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
+    return new Date(dateString).toLocaleDateString("he-IL", {
       year: "numeric",
       month: "short",
       day: "numeric",
     });
+  };
+
+  const getStatusLabel = (status: string | null) => {
+    const labels: Record<string, string> = {
+      completed: "הושלם",
+      in_progress: "בביצוע",
+      pending: "ממתין",
+    };
+    return status ? labels[status] || status : "ממתין";
   };
 
   return (
@@ -167,51 +176,51 @@ const ScheduledTasks = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center gap-2 mb-6">
           <Calendar className="h-6 w-6 text-primary" />
-          <h1 className="text-3xl font-bold">Scheduled Tasks</h1>
+          <h1 className="text-3xl font-bold">משימות מתוזמנות</h1>
         </div>
 
         {loading ? (
-          <div className="text-center py-8">Loading...</div>
+          <div className="text-center py-8">טוען...</div>
         ) : tasks.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
-            No scheduled tasks found
+            לא נמצאו משימות מתוזמנות
           </div>
         ) : (
           <div className="rounded-lg border bg-card">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Assigned To</TableHead>
-                  <TableHead>Client</TableHead>
-                  <TableHead>Frequency</TableHead>
-                  <TableHead>Day of Month</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>כותרת</TableHead>
+                  <TableHead>תיאור</TableHead>
+                  <TableHead>שויך ל</TableHead>
+                  <TableHead>לקוח</TableHead>
+                  <TableHead>תדירות</TableHead>
+                  <TableHead>יום בחודש</TableHead>
+                  <TableHead>סטטוס</TableHead>
+                  <TableHead>נוצר</TableHead>
+                  <TableHead className="text-left">פעולות</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {tasks.map((task) => (
                   <TableRow key={task.id}>
                     <TableCell className="font-medium">
-                      {task.title || "N/A"}
+                      {task.title || "לא זמין"}
                     </TableCell>
                     <TableCell className="max-w-xs truncate">
-                      {task.description || "N/A"}
+                      {task.description || "לא זמין"}
                     </TableCell>
                     <TableCell>{getUserName(task.user_id)}</TableCell>
                     <TableCell>
                       {(task as any).clients?.name ? (
                         <Badge variant="outline">{(task as any).clients.name}</Badge>
                       ) : (
-                        <span className="text-muted-foreground text-sm">All Clients</span>
+                        <span className="text-muted-foreground text-sm">כל הלקוחות</span>
                       )}
                     </TableCell>
                     <TableCell>{getFrequencyLabel(task.frequency)}</TableCell>
                     <TableCell>
-                      {task.scheduled_day ? `Day ${task.scheduled_day}` : "N/A"}
+                      {task.scheduled_day ? `יום ${task.scheduled_day}` : "לא זמין"}
                     </TableCell>
                     <TableCell>
                       <span
@@ -223,11 +232,11 @@ const ScheduledTasks = () => {
                             : "bg-yellow-100 text-yellow-800"
                         }`}
                       >
-                        {task.status || "pending"}
+                        {getStatusLabel(task.status)}
                       </span>
                     </TableCell>
                     <TableCell>{formatDate(task.created_at)}</TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-left">
                       <Button
                         variant="ghost"
                         size="sm"
@@ -247,15 +256,15 @@ const ScheduledTasks = () => {
       <AlertDialog open={deleteTaskId !== null} onOpenChange={() => setDeleteTaskId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Scheduled Task</AlertDialogTitle>
+            <AlertDialogTitle>מחיקת משימה מתוזמנת</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this scheduled task? This action cannot be undone.
+              האם אתה בטוח שברצונך למחוק משימה מתוזמנת זו? פעולה זו לא ניתנת לביטול.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>ביטול</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteTask} className="bg-destructive text-destructive-foreground">
-              Delete
+              מחק
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
