@@ -164,7 +164,7 @@ const Index = () => {
       const usersMap = new Map(users.map((u) => [u.id, u.name]));
       const tasksWithDetails = tasksData?.map((task: any) => ({
         ...task,
-        user_name: usersMap.get(task.user_id) || "Unknown User",
+        user_name: usersMap.get(task.user_id) || "משתמש לא ידוע",
         client_name: task.clients?.name || null,
       })) || [];
 
@@ -172,8 +172,8 @@ const Index = () => {
     } catch (error) {
       console.error("Error fetching tasks:", error);
       toast({
-        title: "Error",
-        description: "Failed to fetch tasks",
+        title: "שגיאה",
+        description: "נכשל בטעינת משימות",
         variant: "destructive",
       });
     } finally {
@@ -221,7 +221,7 @@ const Index = () => {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
+    return date.toLocaleDateString("he-IL", {
       month: "short",
       day: "numeric",
       year: "numeric",
@@ -259,27 +259,27 @@ const Index = () => {
   const getFrequencyLabel = (frequency: string | null) => {
     switch (frequency) {
       case "one_time":
-        return "One Time";
+        return "חד פעמי";
       case "daily":
-        return "Daily";
+        return "יומי";
       case "monthly":
-        return "Monthly";
+        return "חודשי";
       case "quarterly":
-        return "Quarterly (3 months)";
+        return "רבעוני (3 חודשים)";
       case "semi_annually":
-        return "Semi-Annually (6 months)";
+        return "חצי שנתי (6 חודשים)";
       case "annually":
-        return "Annually";
+        return "שנתי";
       default:
-        return "One Time";
+        return "חד פעמי";
     }
   };
 
   const handleAddTask = async () => {
     if (!newTask.title) {
       toast({
-        title: "Error",
-        description: "Please enter a task title",
+        title: "שגיאה",
+        description: "נא להזין כותרת משימה",
         variant: "destructive",
       });
       return;
@@ -288,8 +288,8 @@ const Index = () => {
     // Validate scheduled_day for recurring tasks (except daily)
     if (newTask.frequency !== "one_time" && newTask.frequency !== "daily" && !newTask.scheduled_day) {
       toast({
-        title: "Error",
-        description: "Please select a day of the month for recurring tasks",
+        title: "שגיאה",
+        description: "נא לבחור יום בחודש למשימות חוזרות",
         variant: "destructive",
       });
       return;
@@ -394,8 +394,8 @@ const Index = () => {
       }
 
       toast({
-        title: "Success",
-        description: `Created ${tasksCreated} task(s) successfully`,
+        title: "הצלחה",
+        description: `נוצרו ${tasksCreated} משימות בהצלחה`,
       });
 
       setAddTaskOpen(false);
@@ -411,8 +411,8 @@ const Index = () => {
     } catch (error) {
       console.error("Error adding task:", error);
       toast({
-        title: "Error",
-        description: "Failed to create task",
+        title: "שגיאה",
+        description: "נכשל ביצירת משימה",
         variant: "destructive",
       });
     } finally {
@@ -441,8 +441,8 @@ const Index = () => {
   const handleUpdateTask = async () => {
     if (!editTask.title || !editTask.user_id) {
       toast({
-        title: "Error",
-        description: "Please fill in all required fields",
+        title: "שגיאה",
+        description: "נא למלא את כל השדות הנדרשים",
         variant: "destructive",
       });
       return;
@@ -451,8 +451,8 @@ const Index = () => {
     // Validate scheduled_day for recurring tasks (except daily)
     if (editTask.frequency !== "one_time" && editTask.frequency !== "daily" && !editTask.scheduled_day) {
       toast({
-        title: "Error",
-        description: "Please select a day of the month for recurring tasks",
+        title: "שגיאה",
+        description: "נא לבחור יום בחודש למשימות חוזרות",
         variant: "destructive",
       });
       return;
@@ -519,8 +519,8 @@ const Index = () => {
       if (error) throw error;
 
       toast({
-        title: "Success",
-        description: "Task updated successfully",
+        title: "הצלחה",
+        description: "המשימה עודכנה בהצלחה",
       });
 
       setEditTaskOpen(false);
@@ -528,8 +528,8 @@ const Index = () => {
     } catch (error) {
       console.error("Error updating task:", error);
       toast({
-        title: "Error",
-        description: "Failed to update task",
+        title: "שגיאה",
+        description: "נכשל בעדכון משימה",
         variant: "destructive",
       });
     } finally {
@@ -549,16 +549,16 @@ const Index = () => {
       if (error) throw error;
 
       toast({
-        title: "Success",
-        description: "Task deleted successfully",
+        title: "הצלחה",
+        description: "המשימה נמחקה בהצלחה",
       });
 
       fetchTasks();
     } catch (error) {
       console.error("Error deleting task:", error);
       toast({
-        title: "Error",
-        description: "Failed to delete task",
+        title: "שגיאה",
+        description: "נכשל במחיקת משימה",
         variant: "destructive",
       });
     } finally {
@@ -594,21 +594,21 @@ const Index = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Manager Dashboard</h1>
+            <h1 className="text-3xl font-bold mb-2">לוח בקרה למנהל</h1>
             <p className="text-muted-foreground">
-              View and manage all employee requests and tasks
+              צפייה וניהול כל בקשות ומשימות העובדים
             </p>
           </div>
           <Button onClick={() => setAddTaskOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
-            Add Task
+            הוסף משימה
           </Button>
         </div>
 
         {/* Filters */}
         <div className="space-y-4 mb-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Filters</h2>
+            <h2 className="text-lg font-semibold">סינון</h2>
             <Button
               variant="ghost"
               size="sm"
@@ -622,7 +622,7 @@ const Index = () => {
               className="h-8"
             >
               <X className="h-4 w-4 mr-1" />
-              Clear All
+              נקה הכל
             </Button>
           </div>
           
@@ -631,7 +631,7 @@ const Index = () => {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by name..."
+                placeholder="חיפוש לפי שם..."
                 value={nameFilter}
                 onChange={(e) => setNameFilter(e.target.value)}
                 className="pl-9"
@@ -641,40 +641,40 @@ const Index = () => {
             {/* Status Filter */}
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger>
-                <SelectValue placeholder="Filter by status" />
+                <SelectValue placeholder="סנן לפי סטטוס" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="in progress">In Progress</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="all">כל הסטטוסים</SelectItem>
+                <SelectItem value="pending">ממתין</SelectItem>
+                <SelectItem value="in progress">בביצוע</SelectItem>
+                <SelectItem value="completed">הושלם</SelectItem>
               </SelectContent>
             </Select>
 
             {/* Frequency Filter */}
             <Select value={frequencyFilter} onValueChange={setFrequencyFilter}>
               <SelectTrigger>
-                <SelectValue placeholder="Filter by frequency" />
+                <SelectValue placeholder="סנן לפי תדירות" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Frequencies</SelectItem>
-                <SelectItem value="one_time">One Time</SelectItem>
-                <SelectItem value="daily">Daily</SelectItem>
-                <SelectItem value="monthly">Monthly</SelectItem>
-                <SelectItem value="quarterly">Quarterly</SelectItem>
-                <SelectItem value="semi_annually">Semi-Annually</SelectItem>
-                <SelectItem value="annually">Annually</SelectItem>
+                <SelectItem value="all">כל התדירויות</SelectItem>
+                <SelectItem value="one_time">חד פעמי</SelectItem>
+                <SelectItem value="daily">יומי</SelectItem>
+                <SelectItem value="monthly">חודשי</SelectItem>
+                <SelectItem value="quarterly">רבעוני</SelectItem>
+                <SelectItem value="semi_annually">חצי שנתי</SelectItem>
+                <SelectItem value="annually">שנתי</SelectItem>
               </SelectContent>
             </Select>
 
             {/* Client Filter */}
             <Select value={clientFilter} onValueChange={setClientFilter}>
               <SelectTrigger>
-                <SelectValue placeholder="Filter by client" />
+                <SelectValue placeholder="סנן לפי לקוח" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Clients</SelectItem>
-                <SelectItem value="none">No Client</SelectItem>
+                <SelectItem value="all">כל הלקוחות</SelectItem>
+                <SelectItem value="none">ללא לקוח</SelectItem>
                 {clients.map((client) => (
                   <SelectItem key={client.id} value={client.id}>
                     {client.name}
@@ -694,7 +694,7 @@ const Index = () => {
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dateFilter ? format(dateFilter, "PPP") : "Filter by date"}
+                  {dateFilter ? format(dateFilter, "PPP") : "סנן לפי תאריך"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
@@ -710,7 +710,7 @@ const Index = () => {
           </div>
 
           <div className="text-sm text-muted-foreground">
-            Showing {filteredTasks.length} of {tasks.length} tasks
+            מציג {filteredTasks.length} מתוך {tasks.length} משימות
           </div>
         </div>
 
@@ -720,31 +720,31 @@ const Index = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Assigned To</TableHead>
-                  <TableHead>Client</TableHead>
-                  <TableHead>Frequency</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>כותרת</TableHead>
+                  <TableHead>תיאור</TableHead>
+                  <TableHead>שויך ל</TableHead>
+                  <TableHead>לקוח</TableHead>
+                  <TableHead>תדירות</TableHead>
+                  <TableHead>סטטוס</TableHead>
+                  <TableHead>נוצר</TableHead>
+                  <TableHead className="text-right">פעולות</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredTasks.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                      No tasks found
+                      לא נמצאו משימות
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredTasks.map((task) => (
                     <TableRow key={task.id}>
                       <TableCell className="font-medium">
-                        {task.title || "Untitled"}
+                        {task.title || "ללא כותרת"}
                       </TableCell>
                       <TableCell className="max-w-xs truncate">
-                        {task.description || "No description"}
+                        {task.description || "ללא תיאור"}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -756,7 +756,7 @@ const Index = () => {
                         {task.client_name ? (
                           <Badge variant="outline">{task.client_name}</Badge>
                         ) : (
-                          <span className="text-muted-foreground text-sm">No Client</span>
+                          <span className="text-muted-foreground text-sm">ללא לקוח</span>
                         )}
                       </TableCell>
                       <TableCell>{getFrequencyLabel(task.frequency)}</TableCell>
@@ -773,15 +773,15 @@ const Index = () => {
                               if (error) throw error;
 
                               toast({
-                                title: "Success",
-                                description: "Status updated successfully",
+                                title: "הצלחה",
+                                description: "הסטטוס עודכן בהצלחה",
                               });
                               fetchTasks();
                             } catch (error) {
                               console.error("Error updating status:", error);
                               toast({
-                                title: "Error",
-                                description: "Failed to update status",
+                                title: "שגיאה",
+                                description: "נכשל בעדכון סטטוס",
                                 variant: "destructive",
                               });
                             }
@@ -795,9 +795,9 @@ const Index = () => {
                             </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="pending">Pending</SelectItem>
-                            <SelectItem value="in progress">In Progress</SelectItem>
-                            <SelectItem value="completed">Completed</SelectItem>
+                            <SelectItem value="pending">ממתין</SelectItem>
+                            <SelectItem value="in progress">בביצוע</SelectItem>
+                            <SelectItem value="completed">הושלם</SelectItem>
                           </SelectContent>
                         </Select>
                       </TableCell>
@@ -838,33 +838,33 @@ const Index = () => {
       <Dialog open={addTaskOpen} onOpenChange={setAddTaskOpen}>
         <DialogContent className="max-w-md max-h-[90vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle>Add New Task</DialogTitle>
+            <DialogTitle>הוסף משימה חדשה</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 overflow-y-auto pr-2">
             <div>
-              <Label htmlFor="title">Title *</Label>
+              <Label htmlFor="title">כותרת *</Label>
               <Input
                 id="title"
                 value={newTask.title}
                 onChange={(e) =>
                   setNewTask({ ...newTask, title: e.target.value })
                 }
-                placeholder="Enter task title"
+                placeholder="הזן כותרת משימה"
               />
             </div>
             <div>
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">תיאור</Label>
               <Textarea
                 id="description"
                 value={newTask.description}
                 onChange={(e) =>
                   setNewTask({ ...newTask, description: e.target.value })
                 }
-                placeholder="Enter task description"
+                placeholder="הזן תיאור משימה"
               />
             </div>
             <div>
-              <Label htmlFor="user">Assign To</Label>
+              <Label htmlFor="user">שייך ל</Label>
               <Select
                 value={newTask.user_id}
                 onValueChange={(value) =>
@@ -872,10 +872,10 @@ const Index = () => {
                 }
               >
                 <SelectTrigger id="user">
-                  <SelectValue placeholder="All Employees" />
+                  <SelectValue placeholder="כל העובדים" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Employees</SelectItem>
+                  <SelectItem value="all">כל העובדים</SelectItem>
                   {users.map((user) => (
                     <SelectItem key={user.id} value={user.id.toString()}>
                       {user.name}
@@ -885,7 +885,7 @@ const Index = () => {
               </Select>
             </div>
             <div>
-              <Label htmlFor="client">Client Association</Label>
+              <Label htmlFor="client">שיוך לקוח</Label>
               <Select
                 value={newTask.client_association}
                 onValueChange={(value) =>
@@ -893,11 +893,11 @@ const Index = () => {
                 }
               >
                 <SelectTrigger id="client">
-                  <SelectValue placeholder="Select client" />
+                  <SelectValue placeholder="בחר לקוח" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">No Client</SelectItem>
-                  <SelectItem value="all">All Clients</SelectItem>
+                  <SelectItem value="none">ללא לקוח</SelectItem>
+                  <SelectItem value="all">כל הלקוחות</SelectItem>
                   {clients.map((client) => (
                     <SelectItem key={client.id} value={client.id}>
                       {client.name}
@@ -907,7 +907,7 @@ const Index = () => {
               </Select>
             </div>
             <div>
-              <Label htmlFor="frequency">Frequency</Label>
+              <Label htmlFor="frequency">תדירות</Label>
               <Select
                 value={newTask.frequency}
                 onValueChange={(value) =>
@@ -918,18 +918,18 @@ const Index = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="one_time">One Time</SelectItem>
-                  <SelectItem value="daily">Daily</SelectItem>
-                  <SelectItem value="monthly">Monthly</SelectItem>
-                  <SelectItem value="quarterly">Quarterly (3 months)</SelectItem>
-                  <SelectItem value="semi_annually">Semi-Annually (6 months)</SelectItem>
-                  <SelectItem value="annually">Annually</SelectItem>
+                  <SelectItem value="one_time">חד פעמי</SelectItem>
+                  <SelectItem value="daily">יומי</SelectItem>
+                  <SelectItem value="monthly">חודשי</SelectItem>
+                  <SelectItem value="quarterly">רבעוני (3 חודשים)</SelectItem>
+                  <SelectItem value="semi_annually">חצי שנתי (6 חודשים)</SelectItem>
+                  <SelectItem value="annually">שנתי</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             {newTask.frequency !== "one_time" && newTask.frequency !== "daily" && (
               <div>
-                <Label htmlFor="scheduled_day">Day of Month *</Label>
+                <Label htmlFor="scheduled_day">יום בחודש *</Label>
                 <Select
                   value={newTask.scheduled_day}
                   onValueChange={(value) =>
@@ -937,7 +937,7 @@ const Index = () => {
                   }
                 >
                   <SelectTrigger id="scheduled_day">
-                    <SelectValue placeholder="Select day" />
+                    <SelectValue placeholder="בחר יום" />
                   </SelectTrigger>
                   <SelectContent className="max-h-[200px]">
                     {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
@@ -948,16 +948,16 @@ const Index = () => {
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Select which day of the month this recurring task should be created
+                  בחר באיזה יום בחודש תיווצר המשימה החוזרת
                 </p>
               </div>
             )}
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setAddTaskOpen(false)} disabled={isSubmitting}>
-                Cancel
+                ביטול
               </Button>
               <Button onClick={handleAddTask} disabled={isSubmitting}>
-                {isSubmitting ? "Creating..." : "Create Task"}
+                {isSubmitting ? "יוצר..." : "צור משימה"}
               </Button>
             </div>
           </div>
@@ -968,33 +968,33 @@ const Index = () => {
       <Dialog open={editTaskOpen} onOpenChange={setEditTaskOpen}>
         <DialogContent className="max-w-md max-h-[90vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle>Edit Task</DialogTitle>
+            <DialogTitle>עריכת משימה</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 overflow-y-auto pr-2">
             <div>
-              <Label htmlFor="edit-title">Title *</Label>
+              <Label htmlFor="edit-title">כותרת *</Label>
               <Input
                 id="edit-title"
                 value={editTask.title}
                 onChange={(e) =>
                   setEditTask({ ...editTask, title: e.target.value })
                 }
-                placeholder="Enter task title"
+                placeholder="הזן כותרת משימה"
               />
             </div>
             <div>
-              <Label htmlFor="edit-description">Description</Label>
+              <Label htmlFor="edit-description">תיאור</Label>
               <Textarea
                 id="edit-description"
                 value={editTask.description}
                 onChange={(e) =>
                   setEditTask({ ...editTask, description: e.target.value })
                 }
-                placeholder="Enter task description"
+                placeholder="הזן תיאור משימה"
               />
             </div>
             <div>
-              <Label htmlFor="edit-user">Assign To *</Label>
+              <Label htmlFor="edit-user">שייך ל *</Label>
               <Select
                 value={editTask.user_id}
                 onValueChange={(value) =>
@@ -1002,7 +1002,7 @@ const Index = () => {
                 }
               >
                 <SelectTrigger id="edit-user">
-                  <SelectValue placeholder="Select employee" />
+                  <SelectValue placeholder="בחר עובד" />
                 </SelectTrigger>
                 <SelectContent>
                   {users.map((user) => (
@@ -1014,7 +1014,7 @@ const Index = () => {
               </Select>
             </div>
             <div>
-              <Label htmlFor="edit-client">Client</Label>
+              <Label htmlFor="edit-client">לקוח</Label>
               <Select
                 value={editTask.client_id || "none"}
                 onValueChange={(value) =>
@@ -1022,10 +1022,10 @@ const Index = () => {
                 }
               >
                 <SelectTrigger id="edit-client">
-                  <SelectValue placeholder="Select client" />
+                  <SelectValue placeholder="בחר לקוח" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">No Client</SelectItem>
+                  <SelectItem value="none">ללא לקוח</SelectItem>
                   {clients.map((client) => (
                     <SelectItem key={client.id} value={client.id}>
                       {client.name}
@@ -1035,7 +1035,7 @@ const Index = () => {
               </Select>
             </div>
             <div>
-              <Label htmlFor="edit-frequency">Frequency</Label>
+              <Label htmlFor="edit-frequency">תדירות</Label>
               <Select
                 value={editTask.frequency}
                 onValueChange={(value) =>
@@ -1046,18 +1046,18 @@ const Index = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="one_time">One Time</SelectItem>
-                  <SelectItem value="daily">Daily</SelectItem>
-                  <SelectItem value="monthly">Monthly</SelectItem>
-                  <SelectItem value="quarterly">Quarterly (3 months)</SelectItem>
-                  <SelectItem value="semi_annually">Semi-Annually (6 months)</SelectItem>
-                  <SelectItem value="annually">Annually</SelectItem>
+                  <SelectItem value="one_time">חד פעמי</SelectItem>
+                  <SelectItem value="daily">יומי</SelectItem>
+                  <SelectItem value="monthly">חודשי</SelectItem>
+                  <SelectItem value="quarterly">רבעוני (3 חודשים)</SelectItem>
+                  <SelectItem value="semi_annually">חצי שנתי (6 חודשים)</SelectItem>
+                  <SelectItem value="annually">שנתי</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             {editTask.frequency !== "one_time" && editTask.frequency !== "daily" && (
               <div>
-                <Label htmlFor="edit-scheduled_day">Day of Month *</Label>
+                <Label htmlFor="edit-scheduled_day">יום בחודש *</Label>
                 <Select
                   value={editTask.scheduled_day}
                   onValueChange={(value) =>
@@ -1065,7 +1065,7 @@ const Index = () => {
                   }
                 >
                   <SelectTrigger id="edit-scheduled_day">
-                    <SelectValue placeholder="Select day" />
+                    <SelectValue placeholder="בחר יום" />
                   </SelectTrigger>
                   <SelectContent className="max-h-[200px]">
                     {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
@@ -1076,16 +1076,16 @@ const Index = () => {
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Select which day of the month this recurring task should be created
+                  בחר באיזה יום בחודש תיווצר המשימה החוזרת
                 </p>
               </div>
             )}
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setEditTaskOpen(false)} disabled={isSubmitting}>
-                Cancel
+                ביטול
               </Button>
               <Button onClick={handleUpdateTask} disabled={isSubmitting}>
-                {isSubmitting ? "Updating..." : "Update Task"}
+                {isSubmitting ? "מעדכן..." : "עדכן משימה"}
               </Button>
             </div>
           </div>
@@ -1096,15 +1096,15 @@ const Index = () => {
       <AlertDialog open={deleteTaskId !== null} onOpenChange={() => setDeleteTaskId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Task</AlertDialogTitle>
+            <AlertDialogTitle>מחיקת משימה</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this task? This action cannot be undone.
+              האם אתה בטוח שברצונך למחוק משימה זו? פעולה זו לא ניתנת לביטול.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>ביטול</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteTask} className="bg-destructive text-destructive-foreground">
-              Delete
+              מחק
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1114,32 +1114,32 @@ const Index = () => {
       <Dialog open={chatHistoryOpen} onOpenChange={setChatHistoryOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle>{selectedTask?.title || "Task Chat History"}</DialogTitle>
+            <DialogTitle>{selectedTask?.title || "היסטוריית צ'אט משימה"}</DialogTitle>
           </DialogHeader>
           {selectedTask && (
             <div className="space-y-4 overflow-y-auto pr-2">
               <div>
-                <h4 className="font-semibold mb-2">Description</h4>
+                <h4 className="font-semibold mb-2">תיאור</h4>
                 <p className="text-sm text-muted-foreground">
-                  {selectedTask.description || "No description"}
+                  {selectedTask.description || "ללא תיאור"}
                 </p>
               </div>
               <div>
-                <h4 className="font-semibold mb-2">Assigned To</h4>
+                <h4 className="font-semibold mb-2">שויך ל</h4>
                 <p className="text-sm text-muted-foreground">
                   {selectedTask.user_name}
                 </p>
               </div>
               <div>
-                <h4 className="font-semibold mb-2">Frequency</h4>
+                <h4 className="font-semibold mb-2">תדירות</h4>
                 <p className="text-sm text-muted-foreground">
                   {getFrequencyLabel(selectedTask.frequency)}
                 </p>
               </div>
               <div>
-                <h4 className="font-semibold mb-2">Chat History</h4>
+                <h4 className="font-semibold mb-2">היסטוריית צ'אט</h4>
                 <div className="rounded-md border bg-muted/50 p-4 text-sm max-h-64 overflow-y-auto whitespace-pre-wrap">
-                  {selectedTask.chat_history || "No chat history available"}
+                  {selectedTask.chat_history || "אין היסטוריית צ'אט זמינה"}
                 </div>
               </div>
             </div>
