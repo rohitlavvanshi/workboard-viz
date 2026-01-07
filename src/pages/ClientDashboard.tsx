@@ -167,8 +167,8 @@ const ClientDashboard = () => {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     toast({
-      title: "Logged out successfully",
-      description: "See you next time!",
+      title: "התנתקת בהצלחה",
+      description: "להתראות!",
     });
     navigate("/");
   };
@@ -205,6 +205,40 @@ const ClientDashboard = () => {
     }
   };
 
+  const getStatusLabel = (status: string | null) => {
+    switch (status) {
+      case "completed":
+        return "הושלם";
+      case "in_progress":
+        return "בביצוע";
+      case "pending":
+        return "ממתין";
+      default:
+        return "ממתין";
+    }
+  };
+
+  const getFrequencyLabel = (frequency: string | null) => {
+    switch (frequency) {
+      case "one_time":
+        return "חד פעמי";
+      case "daily":
+        return "יומי";
+      case "weekly":
+        return "שבועי";
+      case "monthly":
+        return "חודשי";
+      case "quarterly":
+        return "רבעוני";
+      case "semi_annually":
+        return "חצי שנתי";
+      case "annually":
+        return "שנתי";
+      default:
+        return frequency;
+    }
+  };
+
   if (isLoadingClient) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/20">
@@ -229,14 +263,14 @@ const ClientDashboard = () => {
               <Briefcase className="h-8 w-8 text-primary" />
               <div>
                 <h1 className="text-2xl font-bold text-foreground">
-                  Welcome, {clientInfo?.name}
+                  ברוך הבא, {clientInfo?.name}
                 </h1>
-                <p className="text-sm text-muted-foreground">Client Portal</p>
+                <p className="text-sm text-muted-foreground">פורטל לקוחות</p>
               </div>
             </div>
             <Button variant="outline" onClick={handleLogout}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
+              <LogOut className="h-4 w-4 me-2" />
+              התנתק
             </Button>
           </div>
         </div>
@@ -250,7 +284,7 @@ const ClientDashboard = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <User className="h-5 w-5 text-primary" />
-                Your Information
+                המידע שלך
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -258,7 +292,7 @@ const ClientDashboard = () => {
                 <div className="flex items-start gap-3">
                   <Package className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Services Provided</p>
+                    <p className="text-sm font-medium text-muted-foreground">שירותים מסופקים</p>
                     <p className="text-base text-foreground">{clientInfo.services_provided}</p>
                   </div>
                 </div>
@@ -268,9 +302,9 @@ const ClientDashboard = () => {
                 <div className="flex items-start gap-3">
                   <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Service Start Date</p>
+                    <p className="text-sm font-medium text-muted-foreground">תאריך תחילת שירות</p>
                     <p className="text-base text-foreground">
-                      {new Date(clientInfo.service_start_date).toLocaleDateString()}
+                      {new Date(clientInfo.service_start_date).toLocaleDateString("he-IL")}
                     </p>
                   </div>
                 </div>
@@ -280,7 +314,7 @@ const ClientDashboard = () => {
                 <div className="flex items-start gap-3">
                   <User className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Assigned Employees</p>
+                    <p className="text-sm font-medium text-muted-foreground">עובדים מוקצים</p>
                     <div className="flex flex-wrap gap-2 mt-1">
                       {clientInfo.assigned_employees.map((employee: { id: number; name: string | null }) => (
                         <Badge key={employee.id} variant="secondary" className="text-xs">
@@ -299,7 +333,7 @@ const ClientDashboard = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <ListTodo className="h-5 w-5 text-primary" />
-                Task Summary
+                סיכום משימות
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -308,19 +342,19 @@ const ClientDashboard = () => {
                   <p className="text-3xl font-bold text-foreground">
                     {tasks?.filter(t => t.status === "pending").length || 0}
                   </p>
-                  <p className="text-sm text-muted-foreground mt-1">Pending</p>
+                  <p className="text-sm text-muted-foreground mt-1">ממתין</p>
                 </div>
                 <div className="text-center p-4 rounded-lg bg-muted/50">
                   <p className="text-3xl font-bold text-primary">
                     {tasks?.filter(t => t.status === "in_progress").length || 0}
                   </p>
-                  <p className="text-sm text-muted-foreground mt-1">In Progress</p>
+                  <p className="text-sm text-muted-foreground mt-1">בביצוע</p>
                 </div>
                 <div className="text-center p-4 rounded-lg bg-muted/50">
                   <p className="text-3xl font-bold text-green-600">
                     {tasks?.filter(t => t.status === "completed").length || 0}
                   </p>
-                  <p className="text-sm text-muted-foreground mt-1">Completed</p>
+                  <p className="text-sm text-muted-foreground mt-1">הושלם</p>
                 </div>
               </div>
             </CardContent>
@@ -334,25 +368,25 @@ const ClientDashboard = () => {
               <div>
                 <CardTitle className="flex items-center gap-2">
                   <ListTodo className="h-5 w-5 text-primary" />
-                  Your Tasks
+                  המשימות שלך
                 </CardTitle>
                 <CardDescription className="mt-1">
-                  Track all tasks assigned to you
+                  עקוב אחר כל המשימות שהוקצו לך
                 </CardDescription>
               </div>
               <div className="w-48">
                 <Label htmlFor="status-filter" className="text-xs text-muted-foreground">
-                  Filter by Status
+                  סינון לפי סטטוס
                 </Label>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger id="status-filter">
-                    <SelectValue placeholder="All statuses" />
+                    <SelectValue placeholder="כל הסטטוסים" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All statuses</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="in_progress">In Progress</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="all">כל הסטטוסים</SelectItem>
+                    <SelectItem value="pending">ממתין</SelectItem>
+                    <SelectItem value="in_progress">בביצוע</SelectItem>
+                    <SelectItem value="completed">הושלם</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -373,7 +407,7 @@ const ClientDashboard = () => {
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
                           <h3 className="font-semibold text-lg text-foreground mb-1">
-                            {task.title || "Untitled Task"}
+                            {task.title || "משימה ללא כותרת"}
                           </h3>
                           {task.description && (
                             <p className="text-sm text-muted-foreground">
@@ -383,7 +417,7 @@ const ClientDashboard = () => {
                         </div>
                         <Badge variant={getStatusColor(task.status)} className="flex items-center gap-1">
                           {getStatusIcon(task.status)}
-                          {task.status || "pending"}
+                          {getStatusLabel(task.status)}
                         </Badge>
                       </div>
                       
@@ -401,14 +435,14 @@ const ClientDashboard = () => {
                         
                         {task.frequency && (
                           <Badge variant="outline" className="text-xs">
-                            {task.frequency.replace('_', ' ')}
+                            {getFrequencyLabel(task.frequency)}
                           </Badge>
                         )}
                         
                         <div className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
                           <span className="text-xs">
-                            {new Date(task.created_at).toLocaleDateString()}
+                            {new Date(task.created_at).toLocaleDateString("he-IL")}
                           </span>
                         </div>
                       </div>
@@ -419,11 +453,11 @@ const ClientDashboard = () => {
             ) : (
               <div className="text-center py-12">
                 <ListTodo className="h-16 w-16 text-muted-foreground/50 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-foreground mb-2">No tasks found</h3>
+                <h3 className="text-lg font-semibold text-foreground mb-2">לא נמצאו משימות</h3>
                 <p className="text-sm text-muted-foreground">
                   {statusFilter !== "all" 
-                    ? `No ${statusFilter.replace('_', ' ')} tasks at the moment`
-                    : "You don't have any tasks assigned yet"}
+                    ? `אין משימות ${getStatusLabel(statusFilter)} כרגע`
+                    : "עדיין לא הוקצו לך משימות"}
                 </p>
               </div>
             )}
