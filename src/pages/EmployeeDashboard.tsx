@@ -74,7 +74,7 @@ const EmployeeDashboard = () => {
 
       if (userError) throw userError;
       
-      setUserName(userData.name || "Employee");
+      setUserName(userData.name || "עובד");
 
       // Fetch user's tasks
       const { data: tasksData, error: tasksError } = await supabase
@@ -89,8 +89,8 @@ const EmployeeDashboard = () => {
     } catch (error) {
       console.error("Error:", error);
       toast({
-        title: "Error",
-        description: "Failed to load tasks",
+        title: "שגיאה",
+        description: "נכשל בטעינת משימות",
         variant: "destructive",
       });
     } finally {
@@ -121,8 +121,8 @@ const EmployeeDashboard = () => {
       if (error) throw error;
 
       toast({
-        title: "Success",
-        description: "Task updated successfully",
+        title: "הצלחה",
+        description: "המשימה עודכנה בהצלחה",
       });
 
       setIsEditDialogOpen(false);
@@ -130,8 +130,8 @@ const EmployeeDashboard = () => {
     } catch (error) {
       console.error("Error:", error);
       toast({
-        title: "Error",
-        description: "Failed to update task",
+        title: "שגיאה",
+        description: "נכשל בעדכון משימה",
         variant: "destructive",
       });
     }
@@ -158,20 +158,33 @@ const EmployeeDashboard = () => {
   const getFrequencyLabel = (frequency: string | null) => {
     switch (frequency) {
       case "one_time":
-        return "One Time";
+        return "חד פעמי";
       case "daily":
-        return "Daily";
+        return "יומי";
       case "weekly":
-        return "Weekly";
+        return "שבועי";
       case "monthly":
-        return "Monthly";
+        return "חודשי";
       default:
-        return frequency || "N/A";
+        return frequency || "לא זמין";
+    }
+  };
+
+  const getStatusLabel = (status: string | null) => {
+    switch (status?.toLowerCase()) {
+      case "completed":
+        return "הושלם";
+      case "in_progress":
+        return "בביצוע";
+      case "pending":
+        return "ממתין";
+      default:
+        return status || "לא זמין";
     }
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
+    return new Date(dateString).toLocaleDateString("he-IL", {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -193,12 +206,12 @@ const EmployeeDashboard = () => {
     <div className="min-h-screen bg-background">
       <div className="bg-card border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold">My Tasks</h1>
+          <h1 className="text-2xl font-bold">המשימות שלי</h1>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">Welcome, {userName}</span>
+            <span className="text-sm text-muted-foreground">ברוך הבא, {userName}</span>
             <Button variant="outline" onClick={handleLogout}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
+              <LogOut className="h-4 w-4 ml-2" />
+              התנתק
             </Button>
           </div>
         </div>
@@ -209,29 +222,29 @@ const EmployeeDashboard = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Title</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Frequency</TableHead>
-                <TableHead>Created At</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead>כותרת</TableHead>
+                <TableHead>תיאור</TableHead>
+                <TableHead>סטטוס</TableHead>
+                <TableHead>תדירות</TableHead>
+                <TableHead>נוצר ב</TableHead>
+                <TableHead>פעולות</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {tasks.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center text-muted-foreground">
-                    No tasks assigned yet
+                    עדיין לא הוקצו משימות
                   </TableCell>
                 </TableRow>
               ) : (
                 tasks.map((task) => (
                   <TableRow key={task.id}>
-                    <TableCell className="font-medium">{task.title || "N/A"}</TableCell>
-                    <TableCell>{task.description || "N/A"}</TableCell>
+                    <TableCell className="font-medium">{task.title || "לא זמין"}</TableCell>
+                    <TableCell>{task.description || "לא זמין"}</TableCell>
                     <TableCell>
                       <Badge className={getStatusColor(task.status)}>
-                        {task.status || "N/A"}
+                        {getStatusLabel(task.status)}
                       </Badge>
                     </TableCell>
                     <TableCell>{getFrequencyLabel(task.frequency)}</TableCell>
@@ -243,7 +256,7 @@ const EmployeeDashboard = () => {
                           size="sm"
                           onClick={() => handleEditTask(task)}
                         >
-                          Update Status
+                          עדכן סטטוס
                         </Button>
                         {task.chat_history && (
                           <Button
@@ -268,32 +281,32 @@ const EmployeeDashboard = () => {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Update Task Status</DialogTitle>
+            <DialogTitle>עדכון סטטוס משימה</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">Task</label>
+              <label className="text-sm font-medium mb-2 block">משימה</label>
               <p className="text-sm text-muted-foreground">{selectedTask?.title}</p>
             </div>
             <div>
-              <label className="text-sm font-medium mb-2 block">Status</label>
+              <label className="text-sm font-medium mb-2 block">סטטוס</label>
               <Select value={editStatus} onValueChange={setEditStatus}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="in_progress">In Progress</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="pending">ממתין</SelectItem>
+                  <SelectItem value="in_progress">בביצוע</SelectItem>
+                  <SelectItem value="completed">הושלם</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              Cancel
+              ביטול
             </Button>
-            <Button onClick={handleUpdateTask}>Update</Button>
+            <Button onClick={handleUpdateTask}>עדכן</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -302,11 +315,11 @@ const EmployeeDashboard = () => {
       <Dialog open={isHistoryDialogOpen} onOpenChange={setIsHistoryDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Task Chat History</DialogTitle>
+            <DialogTitle>היסטוריית צ'אט משימה</DialogTitle>
           </DialogHeader>
           <div className="max-h-96 overflow-y-auto">
             <pre className="text-sm whitespace-pre-wrap">
-              {selectedTask?.chat_history || "No chat history available"}
+              {selectedTask?.chat_history || "אין היסטוריית צ'אט זמינה"}
             </pre>
           </div>
         </DialogContent>
