@@ -198,7 +198,7 @@ const ScheduledTasks = () => {
                   <TableHead>יום בחודש</TableHead>
                   <TableHead>סטטוס</TableHead>
                   <TableHead>נוצר</TableHead>
-                  <TableHead className="text-left">פעולות</TableHead>
+                  <TableHead className="text-right">פעולות</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -236,7 +236,7 @@ const ScheduledTasks = () => {
                       </span>
                     </TableCell>
                     <TableCell>{formatDate(task.created_at)}</TableCell>
-                    <TableCell className="text-left">
+                    <TableCell className="text-right">
                       <Button
                         variant="ghost"
                         size="sm"
@@ -261,7 +261,7 @@ const ScheduledTasks = () => {
               האם אתה בטוח שברצונך למחוק משימה מתוזמנת זו? פעולה זו לא ניתנת לביטול.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="gap-2">
             <AlertDialogCancel>ביטול</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteTask} className="bg-destructive text-destructive-foreground">
               מחק
