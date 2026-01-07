@@ -210,7 +210,7 @@ const EmployeeDashboard = () => {
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground">ברוך הבא, {userName}</span>
             <Button variant="outline" onClick={handleLogout}>
-              <LogOut className="h-4 w-4 ml-2" />
+              <LogOut className="h-4 w-4 me-2" />
               התנתק
             </Button>
           </div>
