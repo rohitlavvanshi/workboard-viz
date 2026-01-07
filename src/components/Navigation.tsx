@@ -11,25 +11,25 @@ const Navigation = () => {
   const { toast } = useToast();
 
   const navItems = [
-    { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { to: "/users", label: "Users", icon: Users },
-    { to: "/clients", label: "Clients", icon: Briefcase },
-    { to: "/scheduled-tasks", label: "Scheduled Tasks", icon: Calendar },
+    { to: "/dashboard", label: "לוח בקרה", icon: LayoutDashboard },
+    { to: "/users", label: "עובדים", icon: Users },
+    { to: "/clients", label: "לקוחות", icon: Briefcase },
+    { to: "/scheduled-tasks", label: "משימות מתוזמנות", icon: Calendar },
   ];
 
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
       toast({
-        title: "Logged Out",
-        description: "You have been successfully logged out.",
+        title: "התנתקת",
+        description: "התנתקת בהצלחה מהמערכת.",
       });
       navigate("/");
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to log out. Please try again.",
+        title: "שגיאה",
+        description: "נכשל בהתנתקות. נא לנסות שוב.",
       });
     }
   };
@@ -39,7 +39,7 @@ const Navigation = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-8">
-            <h1 className="text-xl font-bold text-primary">WorkBoard</h1>
+            <h1 className="text-xl font-bold text-primary">לוח עבודה</h1>
             <div className="flex gap-1">
               {navItems.map((item) => {
                 const isActive = location.pathname === item.to;
@@ -68,7 +68,7 @@ const Navigation = () => {
             className="flex items-center gap-2"
           >
             <LogOut className="h-4 w-4" />
-            Logout
+            התנתק
           </Button>
         </div>
       </div>
