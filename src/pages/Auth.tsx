@@ -58,7 +58,7 @@ const Auth = () => {
       if (error) {
         toast({
           variant: "destructive",
-          title: "Login Failed",
+          title: "ההתחברות נכשלה",
           description: error.message,
         });
         setLoading(false);
@@ -77,8 +77,8 @@ const Auth = () => {
           await supabase.auth.signOut();
           toast({
             variant: "destructive",
-            title: "Database Error",
-            description: `Error checking user permissions: ${userError.message}`,
+            title: "שגיאת מסד נתונים",
+            description: `שגיאה בבדיקת הרשאות משתמש: ${userError.message}`,
           });
           setLoading(false);
           return;
@@ -89,16 +89,16 @@ const Auth = () => {
           await supabase.auth.signOut();
           toast({
             variant: "destructive",
-            title: "Account Not Linked",
-            description: "Your account is not linked to a user profile. Please contact an administrator.",
+            title: "החשבון לא מקושר",
+            description: "החשבון שלך אינו מקושר לפרופיל משתמש. אנא פנה למנהל.",
           });
           setLoading(false);
           return;
         }
 
         toast({
-          title: "Login Successful",
-          description: `Welcome back${userData.name ? ', ' + userData.name : ''}!`,
+          title: "ההתחברות הצליחה",
+          description: `ברוך הבא${userData.name ? ', ' + userData.name : ''}!`,
         });
 
         // Redirect based on role
@@ -113,8 +113,8 @@ const Auth = () => {
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
+        title: "שגיאה",
+        description: "אירעה שגיאה בלתי צפויה. נסה שוב.",
       });
     } finally {
       setLoading(false);
@@ -130,24 +130,24 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-secondary/30 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-secondary/30 p-4" dir="rtl">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">WorkBoard</h1>
-          <p className="text-muted-foreground">Task Management System</p>
+          <h1 className="text-4xl font-bold text-foreground mb-2">לוח עבודה</h1>
+          <p className="text-muted-foreground">מערכת ניהול משימות</p>
         </div>
         
         <Card className="shadow-xl border-border/50">
           <CardHeader className="space-y-1 pb-4">
-            <CardTitle className="text-2xl font-semibold">Welcome back</CardTitle>
+            <CardTitle className="text-2xl font-semibold">ברוך הבא</CardTitle>
             <CardDescription>
-              Enter your credentials to access your account
+              הזן את פרטי הכניסה שלך כדי לגשת לחשבון
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-0">
             <form onSubmit={handleLogin} className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium">Email address</Label>
+                <Label htmlFor="email" className="text-sm font-medium">כתובת אימייל</Label>
                 <Input
                   id="email"
                   type="email"
@@ -157,10 +157,11 @@ const Auth = () => {
                   required
                   disabled={loading}
                   className="h-11"
+                  dir="ltr"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+                <Label htmlFor="password" className="text-sm font-medium">סיסמה</Label>
                 <Input
                   id="password"
                   type="password"
@@ -170,16 +171,17 @@ const Auth = () => {
                   required
                   disabled={loading}
                   className="h-11"
+                  dir="ltr"
                 />
               </div>
               <Button type="submit" className="w-full h-11 text-base font-medium" disabled={loading}>
                 {loading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in...
+                    <Loader2 className="me-2 h-4 w-4 animate-spin" />
+                    מתחבר...
                   </>
                 ) : (
-                  "Sign in"
+                  "התחבר"
                 )}
               </Button>
             </form>
@@ -187,7 +189,7 @@ const Auth = () => {
         </Card>
         
         <p className="text-center text-sm text-muted-foreground mt-6">
-          Authorized personnel only
+          למורשים בלבד
         </p>
       </div>
     </div>
